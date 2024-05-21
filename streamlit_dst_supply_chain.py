@@ -311,7 +311,7 @@ if sidebar == pages[2]:
             Le jeu de données brut (la table Leboncoin et la table Vinted) récolté d'internet par le webscrapping nécessite quelques transformations afin d'être exploitable pour effectuer
             les premières visualisations.\n
             Ces transformations impliquent notamment la mise à jour des types, des formattages de date,
-            la suppression des doublons ou encore la gestion des NA.  
+            la suppression des doublons ou encore la gestion des NA.\n
             Les sections suivantes détaillent les opérations qui ont été effectuées sur le Leboncoin (df1) et Vinted (df2).
             Les infos sur les types et valeurs manquantes des deux tables du jeu de données sont visibles ci-après :
             """
