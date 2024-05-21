@@ -225,6 +225,7 @@ st.sidebar.write(auteurs)
 
 # ----------------- Page 0 "Le Projet" -----------------------------------
 if sidebar == pages[0]:
+    st.header(pages[0])
     presentation = """
                 Ce projet a été réalisés dans le cadre de notre formation en data science délivrée par 
                 [Datascientest](https://datascientest.com/formation-data-scientist). 
@@ -243,7 +244,6 @@ if sidebar == pages[0]:
                 la mise en place d'algorithmes de Machine Learning pour prédire les résultats des notes. N'hésitez pas à tester.
                 """
 
-    st.header(pages[0])
     st.subheader("1. Présentation")
     st.write(presentation)
     st.subheader("2. Objectif")
@@ -251,6 +251,8 @@ if sidebar == pages[0]:
 
 # ----------------- Page 1 "Obtention des données" -----------------------
 if sidebar == pages[1]:
+    st.header(pages[1])
+
     source = """ 
                 Les données ont été collectées à partir :
                 - [Des derniers avis clients déposés sur Truspilot pour Leboncoin](https://fr.trustpilot.com/review/www.leboncoin.fr?languages=all&sort=recency)
@@ -265,7 +267,7 @@ if sidebar == pages[1]:
                 """
 
     webscrapping = """
-                Grâce à la bibliothèque :orange[*BeautifulSoup*] de python, un programme a été rédigé afin de collecter les données 
+                Grâce à la bibliothèque :orange[***BeautifulSoup***] de python, un programme a été rédigé afin de collecter les données 
                 en "webscrappant" le site Trustpilot.
                 - Afin d'avoir un jeu de données  consistant, mais aussi pour avoir des avis étalés sur plusieurs mois, le code mis en place 
                 a permis de récupérer la totalité des avis publiés pour Vinted.  
@@ -273,12 +275,10 @@ if sidebar == pages[1]:
                 - Afin d'avoir un jeu données équilibré pour les deux entreprises, à la même date, les 25.000 derniers avis publiés pour Leboncoin 
                 ont également été récoltés.\n
                 Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.\n
-                Note: Plus loin dans le projet, nous nous servirons aussi de la bibliothèque :orange[*Selenium*] pour nous connecter à Google
-                traduction dans le but de détecter la langue de rédaction des avis, et traduire automatiquement ceux qui sont rédigés dans une 
-                langue que le français.
+                **Note :** Plus loin dans le projet, nous nous servirons de la bibliothèque :orange[***Selenium***] pour nous connecter à Google
+                traduction, détecter la langue de rédaction des avis, et traduire automatiquement ceux qui sont rédigés dans une 
+                langue autre que le français.
                 """
-
-    st.header(pages[1])
     st.subheader("1. Sources de données")
     st.write(source)
     st.subheader("2. Web scrapping")
@@ -311,13 +311,14 @@ if sidebar == pages[1]:
         # Affichage du df2
         st.dataframe(df2.head(number2))
 
-# ----------------- Page 2 "Jeu de données" ------------------------------
+# ----------------- Page 2 "Nettoyage du jeu de données" ------------------------------
 if sidebar == pages[2]:
     st.header(pages[2])
     # --------------- Affichage de l'introduction
     intro = """ 
             Le jeu de données brut (la table Leboncoin et la table Vinted) récolté d'internet par le webscrapping nécessite quelques transformations afin d'être exploitable pour effectuer
-            les premières visualisations. Ces transformations impliquent notamment la mise à jour des types, des formattages de date,
+            les premières visualisations.\n
+            Ces transformations impliquent notamment la mise à jour des types, des formattages de date,
             la suppression des doublons ou encore la gestion des NA.  
             Les sections suivantes détaillent les opérations qui ont été effectuées sur le Leboncoin (df1) et Vinted (df2).
             Les infos sur les types et valeurs manquantes des deux tables du jeu de données sont visibles ci-après :
@@ -603,6 +604,8 @@ if sidebar == pages[2]:
         number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df), value= 5, key= 3)
 
 # ----------------- Page 3 "Quelques datavisualisations" -----------------
+if sidebar == pages[3]:
+    st.header(pages[3])
 
 # ----------------- Page 4 "Préparation des données" ---------------------
 if sidebar == pages[4]:
@@ -646,3 +649,10 @@ if sidebar == pages[4]:
     st.write("#### d. Autres tables")
     st.write("À construire")
     
+# ----------------- Page 5 "Machine Learning" -----------------
+if sidebar == pages[5]:
+    st.header(pages[5])
+
+# ----------------- Page 6 "Conclusion et perspectives" -----------------
+if sidebar == pages[6]:
+    st.header(pages[6])
