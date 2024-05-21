@@ -268,7 +268,7 @@ if sidebar == pages[1]:
                 ont également été récoltés.\n
                 Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.\n
                 **Note :** Plus loin dans le projet, nous nous servirons de la bibliothèque :orange[***Selenium***] pour nous connecter à Google
-                traduction. Puis pour chaque avis : détecter et récupérer sa langue de rédaction, traduire automatiquement son titre/commentaire
+                traduction. Puis pour chaque avis : détecter, récupérer sa langue de rédaction et traduire automatiquement son titre/commentaire
                 sauf si c'est déjà rédigés en français.
                 """
     st.subheader("1. Sources de données")
