@@ -279,26 +279,26 @@ if sidebar == pages[1]:
     st.write("**Le jeu de données brut peut être visible en partie, ou en totalité ci-après.**")
 
     # ----------- Si affichage demandé -----------
-    if st.toggle("Infos sur la table récoltée de Leboncoin"):
+    if st.toggle("Infos sur la table récoltée de Leboncoin", key= 1):
         # Affichage des infos
         buffer = io.StringIO()
         df1_old.info(buf=buffer)
         s1 = buffer.getvalue()
         st.text(s1)
 
-    if st.toggle("Infos sur la table récoltée de Vinted"):
+    if st.toggle("Infos sur la table récoltée de Vinted", key= 2):
         # Affichage des infos
         buffer = io.StringIO()
         df2_old.info(buf=buffer)
         s2 = buffer.getvalue()
         st.text(s2)
 
-    if st.toggle("Jeu de données brut de Leboncoin"):
+    if st.toggle("Jeu de données brut de Leboncoin", key= 3):
         number1 = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df1), value= 5, key= 1)
         # Affichage du df1
         st.dataframe(df1.head(number1))
 
-    if st.toggle("Jeu de données brut de Vinted"):
+    if st.toggle("Jeu de données brut de Vinted", key= 4):
         number2 = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df2), value= 5, key= 2)
         # Affichage du df2
         st.dataframe(df2.head(number2))
@@ -318,13 +318,13 @@ if sidebar == pages[2]:
     st.write(intro)
     st.write("---")
     col1, col2 = st.columns(2)
-    if col1.toggle("Infos de la table Leboncoin"):
+    if col1.toggle("Infos de la table Leboncoin", key= 5):
             # Affichage des infos de la table1
         buffer = io.StringIO()
         df1_old.info(buf=buffer)
         s1 = buffer.getvalue()
         col1.text(s1)
-    if col2.toggle("Infos de la table Vinted"):
+    if col2.toggle("Infos de la table Vinted", key= 6):
             # Affichage des infos de la table1
         buffer = io.StringIO()
         df2_old.info(buf=buffer)
@@ -338,21 +338,22 @@ if sidebar == pages[2]:
             """
     st.subheader("1. Gestion des NA")
     st.write(gestion_na)
-    code ="""
-        # Gestion des NA df1
-        # Il y a des NA parmi les modalités "nom" et "commentaire"
-        # On les remplace par ""
-        df1["nom"] = df1["nom"].fillna("")
-        df1["commentaire"] = df1["commentaire"].fillna("")
+    if st.toggle(":green[Afficher le code]", key= 7):
+        code ="""
+            # Gestion des NA df1
+            # Il y a des NA parmi les modalités "nom" et "commentaire"
+            # On les remplace par ""
+            df1["nom"] = df1["nom"].fillna("")
+            df1["commentaire"] = df1["commentaire"].fillna("")
 
-        # Gestion des NA df2
-        # Il y a des NA parmi les modalités "pays", "titre" et "commentaire"
-        # On les remplace par ""
-        df2["pays"] = df2["pays"].fillna("")
-        df2["titre"] = df2["titre"].fillna("")
-        df2["commentaire"] = df2["commentaire"].fillna("")
-        """
-    st.code(code)
+            # Gestion des NA df2
+            # Il y a des NA parmi les modalités "pays", "titre" et "commentaire"
+            # On les remplace par ""
+            df2["pays"] = df2["pays"].fillna("")
+            df2["titre"] = df2["titre"].fillna("")
+            df2["commentaire"] = df2["commentaire"].fillna("")
+            """
+        st.code(code)
 
     # Mise à jour des attributs
     maj_type_attributs_date_exp = """
@@ -364,12 +365,13 @@ if sidebar == pages[2]:
         # Mise à jour de la date d'expérience
     st.write("#### a. Mise à jour de l'attribut de la date d'expérience")
     st.write(maj_type_attributs_date_exp)
-    code = """
-        # Mise à jour du type pour l'attribut "date expérience"
-        df1["date expérience"] = pd.to_datetime(df1["date expérience"])
-        df2["date expérience"] = pd.to_datetime(df2["date expérience"])
-        """
-    st.code(code)
+    if st.toggle(":green[Afficher le code]", key= 8):
+        code = """
+            # Mise à jour du type pour l'attribut "date expérience"
+            df1["date expérience"] = pd.to_datetime(df1["date expérience"])
+            df2["date expérience"] = pd.to_datetime(df2["date expérience"])
+            """
+        st.code(code)
 
         # Mise à jour de la date de l'avis
     maj_type_attributs_date_avis = """
@@ -383,19 +385,20 @@ if sidebar == pages[2]:
     st.write(f"{n} modalités de la colonne :orange[**date/heure avis**] de Vinted n'ont pas le bon format de date :")
     st.write(df2_old.loc[df2_old["date/heure avis"].str.contains('T', regex= False), "date/heure avis"])
     st.write(f"Création et application d'une fonction pour ajuster les string problématiques, avant de les formatter en datetime sur les deux df")
-    code = """
-        # Fonction pour convertir en datetime
-        def func_to_datetime(_date):
-            _date = _date.split(".")[0]
-            _date = _date.replace("T", " ")
-            _date = dt.datetime.strptime(_date, "%Y-%m-%d %H:%M:%S")
-            return _date
+    if st.toggle(":green[Afficher le code]", key= 9):
+        code = """
+            # Fonction pour convertir en datetime
+            def func_to_datetime(_date):
+                _date = _date.split(".")[0]
+                _date = _date.replace("T", " ")
+                _date = dt.datetime.strptime(_date, "%Y-%m-%d %H:%M:%S")
+                return _date
 
-        # Application de la fonction sur l'attribut "date/heure avis"
-        df1["date/heure avis"] = df1["date/heure avis"].apply(func_to_datetime)
-        df2["date/heure avis"] = df2["date/heure avis"].apply(func_to_datetime)
-        """
-    st.code(code)
+            # Application de la fonction sur l'attribut "date/heure avis"
+            df1["date/heure avis"] = df1["date/heure avis"].apply(func_to_datetime)
+            df2["date/heure avis"] = df2["date/heure avis"].apply(func_to_datetime)
+            """
+        st.code(code)
 
         # Mise à jour de la date de l'avis
     maj_type_autres_attributs = """
@@ -404,13 +407,14 @@ if sidebar == pages[2]:
     
     st.write("#### c. Mise à jour des autres attributs")
     st.write(maj_type_autres_attributs)
-    code = """
-        # Mise à jour du type pour les autres attributs
-        dict_types = {"nom": "str", "pays": "str", "note": "int", "nombre total avis": "int", "titre": "str", "commentaire": "str"}
-        df1 = df1.astype(dict_types)
-        df2 = df2.astype(dict_types)
-        """
-    st.code(code)
+    if st.toggle(":green[Afficher le code]", key= 10):
+        code = """
+            # Mise à jour du type pour les autres attributs
+            dict_types = {"nom": "str", "pays": "str", "note": "int", "nombre total avis": "int", "titre": "str", "commentaire": "str"}
+            df1 = df1.astype(dict_types)
+            df2 = df2.astype(dict_types)
+            """
+        st.code(code)
 
     # --------------- Suppression des doublons
     suppression_doublons = """
@@ -419,16 +423,17 @@ if sidebar == pages[2]:
     
     st.subheader("3. Suppression des doublons")
     st.write(suppression_doublons)
-    code = """
-        # Suppression des doublons
-        df1_duplicated = df1.duplicated()
-        df1_duplicated = df1[df1_duplicated == True]
-        df1 = df1.drop_duplicates()
-        df2_duplicated = df2.duplicated()
-        df2_duplicated = df2[df2_duplicated == True]
-        df2 = df2.drop_duplicates()
-        """
-    st.code(code)
+    if st.toggle(":green[Afficher le code]", key= 11):
+        code = """
+            # Suppression des doublons
+            df1_duplicated = df1.duplicated()
+            df1_duplicated = df1[df1_duplicated == True]
+            df1 = df1.drop_duplicates()
+            df2_duplicated = df2.duplicated()
+            df2_duplicated = df2[df2_duplicated == True]
+            df2 = df2.drop_duplicates()
+            """
+        st.code(code)
 
     # --------------- Ajout des colonnes longueur titre/longueur commentaire
     ajout_col_nb_mots_titre_commentaire = """
@@ -438,23 +443,24 @@ if sidebar == pages[2]:
     
     st.subheader("4. Ajout des colonnes longueur titre/longueur commentaire")
     st.write(ajout_col_nb_mots_titre_commentaire)
-    code = """
-        # Récupération du nombre de mots dans un texte
-        def func_count_words(_text):
-            _car = ("’", "'", "!", ",", "?", ";", ".", ":", "/", "+", "=", "\\n", "- ", " -", "(", ")", "[", "]", "{", "}", "*", "<", ">")
-            for car in _car:
-                _text = _text.replace(car, " ")
-            return len(_text.split())
+    if st.toggle(":green[Afficher le code]", key= 12):
+        code = """
+            # Récupération du nombre de mots dans un texte
+            def func_count_words(_text):
+                _car = ("’", "'", "!", ",", "?", ";", ".", ":", "/", "+", "=", "\\n", "- ", " -", "(", ")", "[", "]", "{", "}", "*", "<", ">")
+                for car in _car:
+                    _text = _text.replace(car, " ")
+                return len(_text.split())
 
-        # Ajout de la colonne longueur du titre
-        df1["longueur titre"] = df1["titre"].apply(func_count_words)
-        df2["longueur titre"] = df2["titre"].apply(func_count_words)
+            # Ajout de la colonne longueur du titre
+            df1["longueur titre"] = df1["titre"].apply(func_count_words)
+            df2["longueur titre"] = df2["titre"].apply(func_count_words)
 
-        # Ajout de la colonne longueur du commentaire
-        df1["longueur commentaire"] = df1["commentaire"].apply(func_count_words)
-        df2["longueur commentaire"] = df2["commentaire"].apply(func_count_words)
-        """
-    st.code(code)
+            # Ajout de la colonne longueur du commentaire
+            df1["longueur commentaire"] = df1["commentaire"].apply(func_count_words)
+            df2["longueur commentaire"] = df2["commentaire"].apply(func_count_words)
+            """
+        st.code(code)
 
     # --------------- Ajout des colonnes semaine/jour/mois/année pour les dates de l'expérience
     ajout_col_date_exp = """
@@ -464,28 +470,29 @@ if sidebar == pages[2]:
     
     st.subheader("5. Ajout des colonnes semaine/jour/mois/année à partir de la date de l'expérience")
     st.write(ajout_col_date_exp)
-    code = """
-        # Ajout de la colonne semaine expérience
-        df1["semaine expérience"] = df1["date expérience"].apply(lambda date: date.week)
-        df2["semaine expérience"] = df2["date expérience"].apply(lambda date: date.week)
+    if st.toggle(":green[Afficher le code]", key= 13):
+        code = """
+            # Ajout de la colonne semaine expérience
+            df1["semaine expérience"] = df1["date expérience"].apply(lambda date: date.week)
+            df2["semaine expérience"] = df2["date expérience"].apply(lambda date: date.week)
 
-        # Ajout de la colonne jour de semaine de l'expérience
-        df1["jour semaine expérience"] = df1["date expérience"].apply(func_get_weekday)
-        df2["jour semaine expérience"] = df2["date expérience"].apply(func_get_weekday)
+            # Ajout de la colonne jour de semaine de l'expérience
+            df1["jour semaine expérience"] = df1["date expérience"].apply(func_get_weekday)
+            df2["jour semaine expérience"] = df2["date expérience"].apply(func_get_weekday)
 
-        # Ajout de la colonne jour du mois de l'expérience
-        df1["jour expérience"] = df1["date expérience"].apply(lambda date: date.day)
-        df2["jour expérience"] = df2["date expérience"].apply(lambda date: date.day)
+            # Ajout de la colonne jour du mois de l'expérience
+            df1["jour expérience"] = df1["date expérience"].apply(lambda date: date.day)
+            df2["jour expérience"] = df2["date expérience"].apply(lambda date: date.day)
 
-        # Ajout de la colonne mois de l'expérience
-        df1["mois expérience"] = df1["date expérience"].apply(func_get_month)
-        df2["mois expérience"] = df2["date expérience"].apply(func_get_month)
+            # Ajout de la colonne mois de l'expérience
+            df1["mois expérience"] = df1["date expérience"].apply(func_get_month)
+            df2["mois expérience"] = df2["date expérience"].apply(func_get_month)
 
-        # Ajout de la colonne année de l'expérience
-        df1["année expérience"] = df1["date expérience"].apply(lambda date: date.year)
-        df2["année expérience"] = df2["date expérience"].apply(lambda date: date.year)
-        """
-    st.code(code)
+            # Ajout de la colonne année de l'expérience
+            df1["année expérience"] = df1["date expérience"].apply(lambda date: date.year)
+            df2["année expérience"] = df2["date expérience"].apply(lambda date: date.year)
+            """
+        st.code(code)
 
     # --------------- Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis
     ajout_col_date_avis = """
@@ -495,32 +502,33 @@ if sidebar == pages[2]:
     
     st.subheader("6. Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis")
     st.write(ajout_col_date_avis)
-    code = """
-        # Ajout de la colonne semaine de l'avis
-        df1["semaine avis"] = df1["date/heure avis"].apply(lambda date: date.week)
-        df2["semaine avis"] = df2["date/heure avis"].apply(lambda date: date.week)
+    if st.toggle(":green[Afficher le code]", key= 14):
+        code = """
+            # Ajout de la colonne semaine de l'avis
+            df1["semaine avis"] = df1["date/heure avis"].apply(lambda date: date.week)
+            df2["semaine avis"] = df2["date/heure avis"].apply(lambda date: date.week)
 
-        # Ajout de la colonne jour de semaine de l'avis
-        df1["jour semaine avis"] = df1["date/heure avis"].apply(func_get_weekday)
-        df2["jour semaine avis"] = df2["date/heure avis"].apply(func_get_weekday)
+            # Ajout de la colonne jour de semaine de l'avis
+            df1["jour semaine avis"] = df1["date/heure avis"].apply(func_get_weekday)
+            df2["jour semaine avis"] = df2["date/heure avis"].apply(func_get_weekday)
 
-        # Ajout de la colonne jour du mois de l'avis
-        df1["jour avis"] = df1["date/heure avis"].apply(lambda date: date.day)
-        df2["jour avis"] = df2["date/heure avis"].apply(lambda date: date.day)
+            # Ajout de la colonne jour du mois de l'avis
+            df1["jour avis"] = df1["date/heure avis"].apply(lambda date: date.day)
+            df2["jour avis"] = df2["date/heure avis"].apply(lambda date: date.day)
 
-        # Ajout de la colonne mois de l'avis
-        df1["mois avis"] = df1["date/heure avis"].apply(func_get_month)
-        df2["mois avis"] = df2["date/heure avis"].apply(func_get_month)
+            # Ajout de la colonne mois de l'avis
+            df1["mois avis"] = df1["date/heure avis"].apply(func_get_month)
+            df2["mois avis"] = df2["date/heure avis"].apply(func_get_month)
 
-        # Ajout de la colonne année de l'avis
-        df1["année avis"] = df1["date/heure avis"].apply(lambda date: date.year)
-        df2["année avis"] = df2["date/heure avis"].apply(lambda date: date.year)
+            # Ajout de la colonne année de l'avis
+            df1["année avis"] = df1["date/heure avis"].apply(lambda date: date.year)
+            df2["année avis"] = df2["date/heure avis"].apply(lambda date: date.year)
 
-        # Ajout de la colonne heure de l'avis
-        df1["heure avis"] = df1["date/heure avis"].apply(lambda date: date.hour)
-        df2["heure avis"] = df2["date/heure avis"].apply(lambda date: date.hour)
-        """
-    st.code(code)
+            # Ajout de la colonne heure de l'avis
+            df1["heure avis"] = df1["date/heure avis"].apply(lambda date: date.hour)
+            df2["heure avis"] = df2["date/heure avis"].apply(lambda date: date.hour)
+            """
+        st.code(code)
 
     # --------------- Concaténation des tables Leboncoin et Vinted
     select_concat_24500_avis = """
@@ -532,30 +540,31 @@ if sidebar == pages[2]:
     
     st.subheader("7. Concaténation des tables Leboncoin et Vinted")
     st.write(select_concat_24500_avis)
-    code = """
-        # Sélection de 24500 entrées les plus récentes pour chaque dataframe
-        df1 = df1.head(24500)
-        df2 = df2.head(24500)
+    if st.toggle(":green[Afficher le code]", key= 15):
+        code = """
+            # Sélection de 24500 entrées les plus récentes pour chaque dataframe
+            df1 = df1.head(24500)
+            df2 = df2.head(24500)
 
-        # Insertion d'une colonne indiquant le nom de l'entreprise pour l'avis concerné
-        list1 = ["Leboncoin"] * len(df1)
-        list2 = ["Vinted"] * len(df2)
-        df1.insert(0, "entreprise", list1)
-        df2.insert(0, "entreprise", list2)
+            # Insertion d'une colonne indiquant le nom de l'entreprise pour l'avis concerné
+            list1 = ["Leboncoin"] * len(df1)
+            list2 = ["Vinted"] * len(df2)
+            df1.insert(0, "entreprise", list1)
+            df2.insert(0, "entreprise", list2)
 
-        # Concaténation des deux dataframe
-        df = pd.concat([df1, df2], axis= 0, ignore_index= True)
+            # Concaténation des deux dataframe
+            df = pd.concat([df1, df2], axis= 0, ignore_index= True)
 
-        # Tri par date d'avis du plus récent au moins récent
-        df = df.sort_values(by= "date/heure avis", ascending= False)
+            # Tri par date d'avis du plus récent au moins récent
+            df = df.sort_values(by= "date/heure avis", ascending= False)
 
-        # Mise à jour de l'index
-        df = df.reset_index(drop= True)
-        index_df = range(0, len(df))
-        df.insert(0, "id avis", index_df)
-        df = df.set_index("id avis")
-        """
-    st.code(code)
+            # Mise à jour de l'index
+            df = df.reset_index(drop= True)
+            index_df = range(0, len(df))
+            df.insert(0, "id avis", index_df)
+            df = df.set_index("id avis")
+            """
+        st.code(code)
 
 
     # --------------- Ajout des colonnes langue de l'avis/titre fr/commentaire fr
@@ -587,14 +596,15 @@ if sidebar == pages[2]:
     st.write(f"Le jeu de données nettoyé et réajusté comporte {df.shape[0]} entrées et {df.shape[1]} attributs.")
     st.write(conclusion)
     st.write("---")
-    if st.toggle("Infos du dataset après nettoyage et réajustement"):
+    if st.toggle("Infos du dataset après nettoyage et réajustement", key= 16):
         # Affichage des infos
         buffer = io.StringIO()
         df.info(buf=buffer)
         s = buffer.getvalue()
         st.text(s)
-    if st.toggle("Lignes du dataset après nettoyage et réajustement"):
+    if st.toggle("Lignes du dataset après nettoyage et réajustement", key= 17):
         number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df), value= 5, key= 3)
+        st.dataframe(df.head(number))
 
 # ----------------- Page 3 "Quelques datavisualisations" -----------------
 if sidebar == pages[3]:
