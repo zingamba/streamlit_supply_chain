@@ -17,6 +17,10 @@ import streamlit as st
 import io
 # ---------------------------------------------------------------
 
+# ****************************************************************************************************************
+# CODE DE BASE POUR LE NETTOYAGE ET RÉUNIFICATION DES TABLES BRUTES LEBONCOIN ET VINTED
+# ****************************************************************************************************************
+
 # ------------ INITIALISATION DES VARIABLES GLOBALES ------------
 file1 = "25000-reviews_leboncoin_trustpilot_scrapping.csv"
 file2 = "25009-reviews_vinted_trustpilot_scrapping.csv"
@@ -61,60 +65,7 @@ def func_count_words(_text):
     return len(_text.split())
 # ---------------------------------------------------------------
 
-
-
 # -------------------------- TRAITEMENT -------------------------
-# --------------------------    Titre   -------------------------
-title = ":orange[Leboncoin] vs :green[Vinted]"
-col1, col2, col3 = st.columns([1, 0.1, 1.9])
-col1.image("./images/leboncoin-logo.svg", width= 220)
-col2.subheader("*/*")
-col3.image("./images/vinted-logo.svg", width= 130)
-
-
-# --------------------------  Sidebar   -------------------------
-pages = ["Le projet", "Obtention des données", "Nettoyage du jeu de données", "Quelques visualisations", 
-         "Préparation des données", "Machine learning", "Conclusion et perspectives"]
-auteurs = """
-        Auteur1  
-        Auteur2  
-        Auteur3  
-        Auteur4
-        """
-st.sidebar.title("Leboncoin vs Vinted")
-sidebar = st.sidebar.radio("Sélectionnez une partie :", pages)
-st.sidebar.write("---")
-st.sidebar.subheader("Auteurs")             
-st.sidebar.write(auteurs)
-
-# ----------------------- Page 0 "Le Projet" ---------------------
-if sidebar == pages[0]:
-    presentation = """
-                Ce projet a été réalisés dans le cadre de notre formation en data science délivrée par 
-                [Datascientest](https://datascientest.com/formation-data-scientist). 
-                Nous nous sommes intéressés à Leboncoin et Vinted : deux entreprises majeures, concurrentes et spécialisées dans la 
-                publication de petites annonces en ligne pour la vente de biens de particulier à particulier.\n
-                En 2024, Leboncoin.fr (entreprise française) est le 2e site e-commerce le plus consulté en France avec un traffic moyen de 
-                28 millions de visiteurs uniques par mois.\n
-                Tandis que Vinted.fr (entreprise lithuanienne), avec 16 millions de visiteurs uniques mensuel, est le 4ème site e-commerce
-                le plus consulté en France.\n
-                """
-
-    objectif = """
-                L'objectif du projet est de *PRÉDIRE* la note de satisfaction que laisserait un client à propos de ces deux entreprises 
-                sur une plateforme d'avis en ligne, en l'occurence Truspilot.
-                \nCe streamlit présente notre démarche pour mener à bien ce projet, depuis la construction du jeu de données jusqu'à 
-                la mise en place d'algorithmes de Machine Learning pour prédire les résultats des notes. N'hésitez pas à tester.
-                """
-
-    st.header(pages[0])
-    st.subheader("1. Présentation")
-    st.write(presentation)
-    st.subheader("2. Objectif")
-    st.write(objectif)
-
-# ----------------- Page 1 "Obtention des données" ----------------
-# ----------- Préparation des données si affichage demandé -----------
 # Chargement des données brutes df1
 df1 = pd.read_csv(file1, sep= ",")
 df1 = df1.rename(columns= {"Unnamed: 0": "id avis", "date de visite": "date expérience",
@@ -134,68 +85,7 @@ df2 = df2.sort_values(by= "date/heure avis", ascending= False)
 # Copies des df
 df1_old = df1.copy()
 df2_old = df2.copy()
-# ---------------------------------------------------------------
 
-if sidebar == pages[1]:
-    source = """ 
-                Les données ont été collectées à partir :
-                - [Des derniers avis clients déposés sur Truspilot pour Leboncoin](https://fr.trustpilot.com/review/www.leboncoin.fr?languages=all&sort=recency)
-                - [Des derniers avis clients déposés sur Truspilot pour Vinted](https://fr.trustpilot.com/review/vinted.fr?languages=all&sort=recency)
-
-                En effet, pour prédire la note d'un client, il est nécessaire d'identifier les entités importantes d’un avis : la note, la localisation, 
-                le nom de l'entreprise, la date, ....  
-                Mais aussi le commentaire laissé par le client afin d'en extraire le propos global : article défectueux ou conforme? 
-                livraison correcte ou problématique? sentiment? ...\n
-                Ne disposant pas d'une base consolidées avec ces informations, il est apparu nécessaire d'aller collecter ces données directement depuis
-                la plateforme d'avis clients Trustpilot.
-                """
-
-    webscrapping = """
-                Grace à la bibliothèque :orange[*BeautifulSoup*], un programme a été rédigé afin de collecter les données 
-                en "webscrappant" le site Trustpilot.
-                - Afin d'avoir un jeu de données  consistant, mais aussi pour avoir des avis étalés sur plusieurs mois, le code mis en place 
-                a permis de récupérer la totalité des avis publiés pour Vinted.  
-                25.009 avis à la date d'exécution du code.
-                - Afin d'avoir un jeu données équilibré pour les deux entreprises, à la même date, les 25.000 derniers avis publiés pour Leboncoin 
-                ont également été récoltés.\n
-                Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.
-                """
-
-    st.header(pages[1])
-    st.subheader("1. Sources de données")
-    st.write(source)
-    st.subheader("2. Web scrapping")
-    st.write(webscrapping)
-    st.write("---")
-    st.write("**Le jeu de données brut peut être visible en partie, ou en totalité ci-après.**")
-
-    # ----------- Si affichage demandé -----------
-    if st.toggle("Infos sur la table récoltée de Leboncoin"):
-        # Affichage des infos
-        buffer = io.StringIO()
-        df1.info(buf=buffer)
-        s = buffer.getvalue()
-        st.text(s)
-
-    if st.toggle("Infos sur la table récoltée de Vinted"):
-        # Affichage des infos
-        buffer = io.StringIO()
-        df2.info(buf=buffer)
-        s = buffer.getvalue()
-        st.text(s)
-
-    if st.toggle("Jeu de données brut de Leboncoin"):
-        number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df1), value= 5)
-        # Affichage du df1
-        st.dataframe(df1.head(number))
-
-    if st.toggle("Jeu de données brut de Vinted"):
-        number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df2), value= 5)
-        # Affichage du df2
-        st.dataframe(df2.head(number))
-
-# ----------------- Page 2 "Jeu de données" ----------------
-# ----------- Préparation des données si affichage demandé -----------
 # Gestion des NA df1
 # Il y a des NA parmi les modalités "nom" et "commentaire"
 # On les remplace par ""
@@ -286,7 +176,7 @@ df2["heure avis"] = df2["date/heure avis"].apply(lambda date: date.hour)
 df1 = df1.head(24500)
 df2 = df2.head(24500)
 
-# ----------- Finalisation de la préparation -------------------
+# ------------------------ FINALISATION --------------------------
 # Insertion d'une colonne indiquant le nom de l'entreprise pour l'avis concerné
 list1 = ["Leboncoin"] * len(df1)
 list2 = ["Vinted"] * len(df2)
@@ -303,8 +193,121 @@ df = df.sort_values(by= "date/heure avis", ascending= False)
 df = df.reset_index(drop= True)
 index_df = range(0, len(df))
 df.insert(0, "id avis", index_df)
-# ---------------------------------------------------------------
 
+# ****************************************************************************************************************
+# FIN CODE DE BASE POUR LE NETTOYAGE ET RÉUNIFICATION DES TABLES BRUTES LEBONCOIN ET VINTED
+# ****************************************************************************************************************
+
+
+# ----------------- Titre   --------------------------------------------
+title = ":orange[Leboncoin] vs :green[Vinted]"
+col1, col2, col3 = st.columns([1, 0.1, 1.9])
+col1.image("./images/leboncoin-logo.svg", width= 220)
+col2.subheader("*/*")
+col3.image("./images/vinted-logo.svg", width= 130)
+
+
+# ----------------  Sidebar   ------------------------------------------
+pages = ["Le projet", "Obtention des données", "Nettoyage du jeu de données", "Quelques visualisations", 
+         "Préparation des données", "Machine learning", "Conclusion et perspectives"]
+auteurs = """
+        Auteur1  
+        Auteur2  
+        Auteur3  
+        Auteur4
+        """
+st.sidebar.title("Leboncoin vs Vinted")
+sidebar = st.sidebar.radio("Sélectionnez une partie :", pages)
+st.sidebar.write("---")
+st.sidebar.subheader("Auteurs")             
+st.sidebar.write(auteurs)
+
+# ----------------- Page 0 "Le Projet" -----------------------------------
+if sidebar == pages[0]:
+    presentation = """
+                Ce projet a été réalisés dans le cadre de notre formation en data science délivrée par 
+                [Datascientest](https://datascientest.com/formation-data-scientist). 
+                Nous nous sommes intéressés à Leboncoin et Vinted : deux entreprises majeures, concurrentes et spécialisées dans la 
+                publication de petites annonces en ligne pour la vente de biens de particulier à particulier.\n
+                En 2024, Leboncoin.fr (entreprise française) est le 2e site e-commerce le plus consulté en France avec un traffic moyen de 
+                28 millions de visiteurs uniques par mois.\n
+                Tandis que Vinted.fr (entreprise lithuanienne), avec 16 millions de visiteurs uniques mensuel, est le 4ème site e-commerce
+                le plus consulté en France.\n
+                """
+
+    objectif = """
+                L'objectif du projet est de *PRÉDIRE* la note de satisfaction que laisserait un client à propos de ces deux entreprises 
+                sur une plateforme d'avis en ligne, en l'occurence Truspilot.
+                \nCe streamlit présente notre démarche pour mener à bien ce projet, depuis la construction du jeu de données jusqu'à 
+                la mise en place d'algorithmes de Machine Learning pour prédire les résultats des notes. N'hésitez pas à tester.
+                """
+
+    st.header(pages[0])
+    st.subheader("1. Présentation")
+    st.write(presentation)
+    st.subheader("2. Objectif")
+    st.write(objectif)
+
+# ----------------- Page 1 "Obtention des données" -----------------------
+if sidebar == pages[1]:
+    source = """ 
+                Les données ont été collectées à partir :
+                - [Des derniers avis clients déposés sur Truspilot pour Leboncoin](https://fr.trustpilot.com/review/www.leboncoin.fr?languages=all&sort=recency)
+                - [Des derniers avis clients déposés sur Truspilot pour Vinted](https://fr.trustpilot.com/review/vinted.fr?languages=all&sort=recency)
+
+                En effet, pour prédire la note d'un client, il est nécessaire d'identifier les entités importantes d’un avis : la note, la localisation, 
+                le nom de l'entreprise, la date, ....  
+                Mais aussi le commentaire laissé par le client afin d'en extraire le propos global : article défectueux ou conforme? 
+                livraison correcte ou problématique? sentiment? ...\n
+                Ne disposant pas d'une base consolidées avec ces informations, il est apparu nécessaire d'aller collecter ces données directement depuis
+                la plateforme d'avis clients Trustpilot.
+                """
+
+    webscrapping = """
+                Grace à la bibliothèque :orange[*BeautifulSoup*], un programme a été rédigé afin de collecter les données 
+                en "webscrappant" le site Trustpilot.
+                - Afin d'avoir un jeu de données  consistant, mais aussi pour avoir des avis étalés sur plusieurs mois, le code mis en place 
+                a permis de récupérer la totalité des avis publiés pour Vinted.  
+                25.009 avis à la date d'exécution du code.
+                - Afin d'avoir un jeu données équilibré pour les deux entreprises, à la même date, les 25.000 derniers avis publiés pour Leboncoin 
+                ont également été récoltés.\n
+                Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.
+                """
+
+    st.header(pages[1])
+    st.subheader("1. Sources de données")
+    st.write(source)
+    st.subheader("2. Web scrapping")
+    st.write(webscrapping)
+    st.write("---")
+    st.write("**Le jeu de données brut peut être visible en partie, ou en totalité ci-après.**")
+
+    # ----------- Si affichage demandé -----------
+    if st.toggle("Infos sur la table récoltée de Leboncoin"):
+        # Affichage des infos
+        buffer = io.StringIO()
+        df1_old.info(buf=buffer)
+        s1 = buffer.getvalue()
+        st.text(s1)
+
+    if st.toggle("Infos sur la table récoltée de Vinted"):
+        # Affichage des infos
+        buffer = io.StringIO()
+        df2_old.info(buf=buffer)
+        s2 = buffer.getvalue()
+        st.text(s2)
+
+    if st.toggle("Jeu de données brut de Leboncoin"):
+        number1 = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df1), value= 5, key= 1)
+        # Affichage du df1
+        st.dataframe(df1.head(number1))
+
+    if st.toggle("Jeu de données brut de Vinted"):
+        number2 = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df2), value= 5, key= 2)
+        # Affichage du df2
+        st.dataframe(df2.head(number2))
+
+# ----------------- Page 2 "Jeu de données" ------------------------------
 if sidebar == pages[2]:
     st.header(pages[2])
     # --------------- Affichage de l'introduction
@@ -322,14 +325,14 @@ if sidebar == pages[2]:
             # Affichage des infos de la table1
         buffer = io.StringIO()
         df1_old.info(buf=buffer)
-        s = buffer.getvalue()
-        col1.text(s)
+        s1 = buffer.getvalue()
+        col1.text(s1)
     if col2.toggle("Infos de la table Vinted"):
             # Affichage des infos de la table1
         buffer = io.StringIO()
         df2_old.info(buf=buffer)
-        s = buffer.getvalue()
-        col2.text(s)
+        s2 = buffer.getvalue()
+        col2.text(s2)
     st.write("---")
 
     # --------------- Gestion des NA
@@ -380,7 +383,7 @@ if sidebar == pages[2]:
     st.write("#### b. Mise à jour de l'attribut de la date de l'avis")
     st.write(maj_type_attributs_date_avis)
     n = len(df2_old.loc[df2_old["date/heure avis"].str.contains('T', regex= False), "date/heure avis"])
-    st.write(f"{n} modalités de la colonne :orange[**date/heure avis**] de df2 n'ont pas le bon format de date")
+    st.write(f"{n} modalités de la colonne :orange[**date/heure avis**] de Vinted n'ont pas le bon format de date :")
     st.write(df2_old.loc[df2_old["date/heure avis"].str.contains('T', regex= False), "date/heure avis"])
     st.write(f"Création et application d'une fonction pour ajuster les string problématiques, avant de formatter en datetime sur les deux df")
     code = """
@@ -441,12 +444,12 @@ if sidebar == pages[2]:
     code = """
         # Récupération du nombre de mots dans un texte
         def func_count_words(_text):
-            _car = ("’", "'", "!", ",", "?", ";", ".", ":", "/", "+", "=", "\n", "- ", " -", "(", ")", "[", "]", "{", "}", "*", "<", ">")
+            _car = ("’", "'", "!", ",", "?", ";", ".", ":", "/", "+", "=", "\\n", "- ", " -", "(", ")", "[", "]", "{", "}", "*", "<", ">")
             for car in _car:
                 _text = _text.replace(car, " ")
             return len(_text.split())
 
-    # Ajout de la colonne longueur du titre
+        # Ajout de la colonne longueur du titre
         df1["longueur titre"] = df1["titre"].apply(func_count_words)
         df2["longueur titre"] = df2["titre"].apply(func_count_words)
 
@@ -586,8 +589,11 @@ if sidebar == pages[2]:
         s = buffer.getvalue()
         st.text(s)
     if st.toggle("Lignes du dataset après nettoyage et réajustement"):
-        number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df), value= 5)
+        number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df), value= 5, key= 3)
 
+# ----------------- Page 3 "Quelques datavisualisations" -----------------
+
+# ----------------- Page 4 "Préparation des données" ---------------------
 if sidebar == pages[4]:
     intro = """ 
             L'objectif du projet s'apparente à un problème de regression.  
