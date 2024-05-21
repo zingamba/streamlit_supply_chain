@@ -312,8 +312,8 @@ if sidebar == pages[2]:
             """
     
     ajout_col_nb_mots_titre_commentaire = """
-            Rajout d'une colonne longueur titre pour compter le nombre de mots qu'il y a dans lee titre de l'avis.
-            Idem pour la colonne longueur commentaire.
+            Rajout d'une colonne :orange[**longueur titre**] pour compter le nombre de mots qu'il y a dans le titre de l'avis.
+            Idem pour le rajout de la colonne :orange[**longueur commentaire**].
             """
     
     ajout_col_date_exp = """
@@ -322,7 +322,7 @@ if sidebar == pages[2]:
             """
     
     ajout_col_date_avis = """
-            Décomposition de l'attribut :orange[**date de l'expérience**] afin de récupérer l'heure, la semaine, le jour de semaine, 
+            Décomposition de l'attribut :orange[**date/heure avis**] afin de récupérer l'heure, la semaine, le jour de semaine, 
             le jour de mois, le mois et l'année.
             """
     
@@ -412,7 +412,7 @@ if sidebar == pages[2]:
     st.code(code)
 
         # Mise à jour de la date de l'avis
-    st.write("#### c. Mise à jour de autres attributs")
+    st.write("#### c. Mise à jour des autres attributs")
     st.write(maj_type_autres_attributs)
     code = """
         # Mise à jour du type pour les autres attributs
@@ -458,7 +458,7 @@ if sidebar == pages[2]:
     st.code(code)
 
     # Ajout des colonnes semaine/jour/mois/année pour les dates de l'expérience
-    st.subheader("5. Ajout des colonnes semaine/jour/mois/année pour les dates de l'expérience")
+    st.subheader("5. Ajout des colonnes semaine/jour/mois/année à partir de la date de l'expérience")
     st.write(ajout_col_date_exp)
     code = """
         # Ajout de la colonne semaine expérience
