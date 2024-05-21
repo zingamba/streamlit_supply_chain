@@ -390,7 +390,7 @@ if sidebar == pages[2]:
     n = len(df2_old.loc[df2_old["date/heure avis"].str.contains('T', regex= False), "date/heure avis"])
     st.write(f"{n} modalités de la colonne :orange[**date/heure avis**] de Vinted n'ont pas le bon format de date :")
     st.write(df2_old.loc[df2_old["date/heure avis"].str.contains('T', regex= False), "date/heure avis"])
-    st.write(f"Création et application d'une fonction pour ajuster les string problématiques, avant de formatter en datetime sur les deux df")
+    st.write(f"Création et application d'une fonction pour ajuster les string problématiques, avant de les formatter en datetime sur les deux df")
     code = """
         # Fonction pour convertir en datetime
         def func_to_datetime(_date):
@@ -422,7 +422,7 @@ if sidebar == pages[2]:
 
     # --------------- Suppression des doublons
     suppression_doublons = """
-            Les doublons sont tous supprimés, en gardant le plus récent.
+            Chaque doublon est supprimé, en gardant le plus récent.
             """
     
     st.subheader("3. Suppression des doublons")
@@ -440,7 +440,7 @@ if sidebar == pages[2]:
 
     # --------------- Ajout des colonnes longueur titre/longueur commentaire
     ajout_col_nb_mots_titre_commentaire = """
-            Rajout d'une colonne :orange[**longueur titre**] pour compter le nombre de mots qu'il y a dans le titre de l'avis.
+            Rajout d'une colonne :orange[**longueur titre**] pour compter le nombre de mots qu'il y a dans le titre de l'avis.\n
             Idem pour le rajout de la colonne :orange[**longueur commentaire**].
             """
     
@@ -533,8 +533,9 @@ if sidebar == pages[2]:
     # --------------- Concaténation des tables Leboncoin et Vinted
     select_concat_24500_avis = """
             À l'issue de toutes ces étapes de nettoyage des deux df, la longueur de la table Leboncoin s'élève 24992 entrées, 
-            et celle de la table Vinted à 24867 entréees. Afin d'harmoniseer le jeu de données en taille, les 24500 1ères valeurs 
-            des deux tables seront concaténéees verticalement pour former un dataset unique.
+            et celle de la table Vinted à 24867 entréees.\n
+            Afin d'harmoniser le jeu de données en taille, les 24500 premières entrées des deux tables sont concaténéees verticalement 
+            pour former un dataset unique.
             """
     
     st.subheader("7. Concaténation des tables Leboncoin et Vinted")
@@ -569,9 +570,9 @@ if sidebar == pages[2]:
     traduction = """
             Certains avis ont été rédigés par des clients dans une autre langue. La dernière étape dans ce 1er travail 
             de revue de dataset consiste à rajouter :
-            - Une colonne pour identifier la langue dans laquelle l'avis a été rédigé
-            - Une colonne pour la traduction du titre en français
-            - Une colonne pour la traduction du commentaire en français\n
+            - Une colonne avec la valeur de la langue dans laquelle l'avis a été rédigé
+            - Une colonne avec la traduction du titre en français
+            - Une colonne avec la traduction du commentaire en français\n
             Pour récupérer les traductions, nous nous servons de la bibliothèque :orange[**Selenium**] de python pour nous connecter 
             à Google translate afin de :  
             - Insérer chaque titre/commentaire de la table dans le champ du texte à traduire de la page Google  
