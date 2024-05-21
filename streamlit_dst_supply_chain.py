@@ -281,9 +281,33 @@ df2["année avis"] = df2["date/heure avis"].apply(lambda date: date.year)
 # Ajout de la colonne heure de l'avis
 df1["heure avis"] = df1["date/heure avis"].apply(lambda date: date.hour)
 df2["heure avis"] = df2["date/heure avis"].apply(lambda date: date.hour)
+
+# Sélection de 24500 entrées les plus récentes pour chaque dataframe
+df1 = df1.head(24500)
+df2 = df2.head(24500)
+
+# ----------- Finalisation de la préparation -------------------
+# Insertion d'une colonne indiquant le nom de l'entreprise pour l'avis concerné
+list1 = ["Leboncoin"] * len(df1)
+list2 = ["Vinted"] * len(df2)
+df1.insert(0, "entreprise", list1)
+df2.insert(0, "entreprise", list2)
+
+# Concaténation des deux dataframe
+df = pd.concat([df1, df2], axis= 0, ignore_index= True)
+
+# Tri par date d'avis du plus récent au moins récent
+df = df.sort_values(by= "date/heure avis", ascending= False)
+
+# Mise à jour de l'index
+df = df.reset_index(drop= True)
+index_df = range(0, len(df))
+df.insert(0, "id avis", index_df)
 # ---------------------------------------------------------------
 
 if sidebar == pages[2]:
+    st.header(pages[2])
+    # --------------- Affichage de l'introduction
     intro = """ 
             Le jeu de données brut (la table Leboncoin et la table Vinted) récolté d'internet par le webscrapping nécessite quelques transformations afin d'être exploitable pour effectuer
             les premières visualisations. Ces transformations impliquent notamment la mise à jour des types, des formattages de date,
@@ -291,57 +315,6 @@ if sidebar == pages[2]:
             Les sections suivantes détaillent les opérations qui ont été effectuées sur le Leboncoin (df1) et Vinted (df2).
             Les infos sur les types et valeurs manquantes des deux tables du jeu de données sont visibles ci-après :
             """
-
-    gestion_na = """
-            Les NA sont remplacés par des "" pour les attributs de type string.
-            """
-    maj_type_attributs_date_exp = """
-            Dans les deux datasets, les modalités de la colonne :orange[**date expérience**] sont déjà sous la forme **%Y-%m-%d**, 
-            mais en format string. On leur applique simplement une conversion en date.
-                """
-    maj_type_attributs_date_avis = """
-            Dans les deux datasets, les modalités de la colonne :orange[**date/heure avis**] doivent être sous la forme **%Y-%m-%d %H:%M:%S**. 
-            Cependant, certaines colonnes apparaissent sous une forme différente. Par exemple :
-                """
-    maj_type_autres_attributs = """
-            Utilisation d'un dictionnaire pour mettre à jour les types des autres attributs.
-                """
-    
-    suppression_doublons = """
-            Les doublons sont tous supprimés, en gardant le plus récent.
-            """
-    
-    ajout_col_nb_mots_titre_commentaire = """
-            Rajout d'une colonne :orange[**longueur titre**] pour compter le nombre de mots qu'il y a dans le titre de l'avis.
-            Idem pour le rajout de la colonne :orange[**longueur commentaire**].
-            """
-    
-    ajout_col_date_exp = """
-            Décomposition de l'attribut :orange[**date de l'expérience**] afin de récupérer la semaine, le jour de semaine,
-            le jour de mois, le mois et l'année. 
-            """
-    
-    ajout_col_date_avis = """
-            Décomposition de l'attribut :orange[**date/heure avis**] afin de récupérer l'heure, la semaine, le jour de semaine, 
-            le jour de mois, le mois et l'année.
-            """
-    
-    select_concat_24500_avis = """
-            À l'issue de toutes ces étapes de nettoyage des deux df, la longueur de la table Leboncoin s'élève 24992 entrées, 
-            et celle de la table Vinted à 24867 entréees. Afin d'harmoniseer le jeu de données en taille, les 24500 1ères valeurs 
-            des deux tables seront concaténéees verticalement pour former un dataset unique.
-            """
-    
-    traduction = """
-            Certains avis ont été rédigés par des clients dans une autre langue. La dernière étape dans ce 1er travail 
-            de revue de dataset consiste à rajouter :
-            - Une colonne pour identifier la langue dans laquelle l'avis a été rédigé
-            - Une colonne pour la traduction du titre en français
-            - Une colonne pour la traduction du commentaire en français
-            """
-    
-    st.header(pages[2])
-    # Affichage de l'introduction
     st.write(intro)
     st.write("---")
     col1, col2 = st.columns(2)
@@ -359,7 +332,10 @@ if sidebar == pages[2]:
         col2.text(s)
     st.write("---")
 
-    # Gestion des NA
+    # --------------- Gestion des NA
+    gestion_na = """
+            Les NA sont remplacés par des "" pour les attributs de type string.
+            """
     st.subheader("1. Gestion des NA")
     st.write(gestion_na)
     code ="""
@@ -379,6 +355,11 @@ if sidebar == pages[2]:
     st.code(code)
 
     # Mise à jour des attributs
+    maj_type_attributs_date_exp = """
+            Dans les deux datasets, les modalités de la colonne :orange[**date expérience**] sont déjà sous la forme **%Y-%m-%d**, 
+            mais en format string. On leur applique simplement une conversion en date.
+                """
+    
     st.subheader("2. Mise à jour des attributs")
         # Mise à jour de la date d'expérience
     st.write("#### a. Mise à jour de l'attribut de la date d'expérience")
@@ -391,6 +372,11 @@ if sidebar == pages[2]:
     st.code(code)
 
         # Mise à jour de la date de l'avis
+    maj_type_attributs_date_avis = """
+            Dans les deux datasets, les modalités de la colonne :orange[**date/heure avis**] doivent être sous la forme **%Y-%m-%d %H:%M:%S**. 
+            Cependant, certaines colonnes apparaissent sous une forme différente. Par exemple :
+                """
+    
     st.write("#### b. Mise à jour de l'attribut de la date de l'avis")
     st.write(maj_type_attributs_date_avis)
     n = len(df2_old.loc[df2_old["date/heure avis"].str.contains('T', regex= False), "date/heure avis"])
@@ -412,6 +398,10 @@ if sidebar == pages[2]:
     st.code(code)
 
         # Mise à jour de la date de l'avis
+    maj_type_autres_attributs = """
+            Utilisation d'un dictionnaire pour mettre à jour les types des autres attributs.
+                """
+    
     st.write("#### c. Mise à jour des autres attributs")
     st.write(maj_type_autres_attributs)
     code = """
@@ -422,7 +412,11 @@ if sidebar == pages[2]:
         """
     st.code(code)
 
-    # Suppression des doublons
+    # --------------- Suppression des doublons
+    suppression_doublons = """
+            Les doublons sont tous supprimés, en gardant le plus récent.
+            """
+    
     st.subheader("3. Suppression des doublons")
     st.write(suppression_doublons)
     code = """
@@ -436,7 +430,12 @@ if sidebar == pages[2]:
         """
     st.code(code)
 
-    # Ajout des colonnes longueur titre/longueur commentaire
+    # --------------- Ajout des colonnes longueur titre/longueur commentaire
+    ajout_col_nb_mots_titre_commentaire = """
+            Rajout d'une colonne :orange[**longueur titre**] pour compter le nombre de mots qu'il y a dans le titre de l'avis.
+            Idem pour le rajout de la colonne :orange[**longueur commentaire**].
+            """
+    
     st.subheader("4. Ajout des colonnes longueur titre/longueur commentaire")
     st.write(ajout_col_nb_mots_titre_commentaire)
     code = """
@@ -457,7 +456,12 @@ if sidebar == pages[2]:
         """
     st.code(code)
 
-    # Ajout des colonnes semaine/jour/mois/année pour les dates de l'expérience
+    # --------------- Ajout des colonnes semaine/jour/mois/année pour les dates de l'expérience
+    ajout_col_date_exp = """
+            Décomposition de l'attribut :orange[**date de l'expérience**] afin de récupérer la semaine, le jour de semaine,
+            le jour de mois, le mois et l'année. 
+            """
+    
     st.subheader("5. Ajout des colonnes semaine/jour/mois/année à partir de la date de l'expérience")
     st.write(ajout_col_date_exp)
     code = """
@@ -483,7 +487,12 @@ if sidebar == pages[2]:
         """
     st.code(code)
 
-    # Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis
+    # --------------- Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis
+    ajout_col_date_avis = """
+            Décomposition de l'attribut :orange[**date/heure avis**] afin de récupérer l'heure, la semaine, le jour de semaine, 
+            le jour de mois, le mois et l'année.
+            """
+    
     st.subheader("6. Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis")
     st.write(ajout_col_date_avis)
     code = """
@@ -513,7 +522,13 @@ if sidebar == pages[2]:
         """
     st.code(code)
 
-    # Concaténation des tables Leboncoin et Vinted
+    # --------------- Concaténation des tables Leboncoin et Vinted
+    select_concat_24500_avis = """
+            À l'issue de toutes ces étapes de nettoyage des deux df, la longueur de la table Leboncoin s'élève 24992 entrées, 
+            et celle de la table Vinted à 24867 entréees. Afin d'harmoniseer le jeu de données en taille, les 24500 1ères valeurs 
+            des deux tables seront concaténéees verticalement pour former un dataset unique.
+            """
+    
     st.subheader("7. Concaténation des tables Leboncoin et Vinted")
     st.write(select_concat_24500_avis)
     code = """
@@ -541,10 +556,38 @@ if sidebar == pages[2]:
     st.code(code)
 
 
-    # Ajout des colonnes langue de l'avis/titre fr/commentaire fr
+    # --------------- Ajout des colonnes langue de l'avis/titre fr/commentaire fr
+    traduction = """
+            Certains avis ont été rédigés par des clients dans une autre langue. La dernière étape dans ce 1er travail 
+            de revue de dataset consiste à rajouter :
+            - Une colonne pour identifier la langue dans laquelle l'avis a été rédigé
+            - Une colonne pour la traduction du titre en français
+            - Une colonne pour la traduction du commentaire en français
+            """
+    
     st.subheader("8. Ajout des colonnes langue de l'avis/titre fr/commentaire fr")
     st.write(traduction)
     
+    # --------------- Conclusion de la page
+    conclusion  = """
+            Ces premières transformations ont permis d'obtenir un dataset de départ propre, et exploitable pour commencer 
+            à faire quelques visualisations.\n
+            Dans la suite du projet, de nouvelles transformations seront apportées pour discrétiser et dichotomiser certains attributs 
+            pour créer des features adaptées aux calculs de Machine Learning.
+            """
+    st.subheader("9. État des lieux")
+    st.write(f"Le jeu de données nettoyé et réajusté comporte {df.shape[0]} entrées et {df.shape[1]} attributs.")
+    st.write(conclusion)
+    st.write("---")
+    if st.toggle("Infos du dataset après nettoyage et réajustement"):
+        # Affichage des infos
+        buffer = io.StringIO()
+        df.info(buf=buffer)
+        s = buffer.getvalue()
+        st.text(s)
+    if st.toggle("Lignes du dataset après nettoyage et réajustement"):
+        number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df), value= 5)
+
 if sidebar == pages[4]:
     intro = """ 
             L'objectif du projet s'apparente à un problème de regression.  
