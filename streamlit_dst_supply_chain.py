@@ -193,6 +193,7 @@ df = df.sort_values(by= "date/heure avis", ascending= False)
 df = df.reset_index(drop= True)
 index_df = range(0, len(df))
 df.insert(0, "id avis", index_df)
+df = df.set_index("id avis")
 
 # ****************************************************************************************************************
 # FIN CODE DE BASE POUR LE NETTOYAGE ET RÉUNIFICATION DES TABLES BRUTES LEBONCOIN ET VINTED
@@ -264,14 +265,17 @@ if sidebar == pages[1]:
                 """
 
     webscrapping = """
-                Grace à la bibliothèque :orange[*BeautifulSoup*], un programme a été rédigé afin de collecter les données 
+                Grâce à la bibliothèque :orange[*BeautifulSoup*] de python, un programme a été rédigé afin de collecter les données 
                 en "webscrappant" le site Trustpilot.
                 - Afin d'avoir un jeu de données  consistant, mais aussi pour avoir des avis étalés sur plusieurs mois, le code mis en place 
                 a permis de récupérer la totalité des avis publiés pour Vinted.  
                 25.009 avis à la date d'exécution du code.
                 - Afin d'avoir un jeu données équilibré pour les deux entreprises, à la même date, les 25.000 derniers avis publiés pour Leboncoin 
                 ont également été récoltés.\n
-                Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.
+                Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.\n
+                Note: Plus loin dans le projet, nous nous servirons aussi de la bibliothèque :orange[*Selenium*] pour nous connecter à Google
+                traduction dans le but de détecter la langue de rédaction des avis, et traduire automatiquement ceux qui sont rédigés dans une 
+                langue que le français.
                 """
 
     st.header(pages[1])
@@ -555,6 +559,7 @@ if sidebar == pages[2]:
         df = df.reset_index(drop= True)
         index_df = range(0, len(df))
         df.insert(0, "id avis", index_df)
+        df = df.set_index("id avis")
         """
     st.code(code)
 
@@ -565,7 +570,13 @@ if sidebar == pages[2]:
             de revue de dataset consiste à rajouter :
             - Une colonne pour identifier la langue dans laquelle l'avis a été rédigé
             - Une colonne pour la traduction du titre en français
-            - Une colonne pour la traduction du commentaire en français
+            - Une colonne pour la traduction du commentaire en français\n
+            Pour récupérer les traductions, nous nous servons de la bibliothèque :orange[**Selenium**] de python pour nous connecter 
+            à Google translate afin de :  
+            - Insérer chaque titre/commentaire de la table dans le champ du texte à traduire de la page Google  
+            - Récupérer la valeur de la "Langue Détectée" par Google et la rajouter dans la ligne correspondante du dataset  
+            - Récupérer la valeur de la traduction et la rajouter dans la ligne correspondante du dataset (si le titre/commentaire
+            n'est pas rédigé en français)
             """
     
     st.subheader("8. Ajout des colonnes langue de l'avis/titre fr/commentaire fr")
