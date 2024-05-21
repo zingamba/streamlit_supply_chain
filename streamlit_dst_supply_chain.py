@@ -170,26 +170,26 @@ if sidebar == pages[1]:
     st.write("**Le jeu de données brut peut être visible en partie, ou en totalité ci-après.**")
 
     # ----------- Si affichage demandé -----------
-    if st.toggle("Afficher les infos récoltées de Leboncoin"):
+    if st.toggle("Infos sur la table récoltée de Leboncoin"):
         # Affichage des infos
         buffer = io.StringIO()
         df1.info(buf=buffer)
         s = buffer.getvalue()
         st.text(s)
 
-    if st.toggle("Afficher les infos récoltées de Vinted"):
+    if st.toggle("Infos sur la table récoltée de Vinted"):
         # Affichage des infos
         buffer = io.StringIO()
         df2.info(buf=buffer)
         s = buffer.getvalue()
         st.text(s)
 
-    if st.toggle("Afficher le jeu de données brut de Leboncoin"):
+    if st.toggle("Jeu de données brut de Leboncoin"):
         number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df1), value= 5)
         # Affichage du df1
         st.dataframe(df1.head(number))
 
-    if st.toggle("Afficher le jeu de données brut de Vinted"):
+    if st.toggle("Jeu de données brut de Vinted"):
         number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df2), value= 5)
         # Affichage du df2
         st.dataframe(df2.head(number))
