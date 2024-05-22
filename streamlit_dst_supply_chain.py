@@ -513,15 +513,19 @@ if sidebar == pages[3]:
     st.write(intro)
     st.write("---")
 
+        # ****************** Séparation en colonne pour les filtres
     st.write("#### Visualisation du jeu de données")
     col1, col2, col3 = st.columns(3)
 
+        # ****************** Texte d'aide sur le filtre
     h = """
     :red-background[- FILTRE QUI PERMET D'AFFICHER UN NOMBRE MAXIMAL D'AVIS.]  
     :red-background[- Utilisez la loupe :mag: sur le tableau pour rechercher une valeur particulière dans le dataset.]  
     :red-background[- Cliquez sur l'entête du tableau pour trier en fonction d'un attribut.]  
     :red-background[- Il est également possible d'élargir les colonnes du tableau.]
         """
+    
+    # ****************** Création des filtres
     nb_avis = col1.number_input(":green[Nombre d'avis max :]", min_value= 1, max_value= len(df_cleaned), value= 5, help= h)
     
     colonnes = col2.multiselect(":green[Attributs :]", df_cleaned.columns, placeholder= "...")
@@ -536,6 +540,7 @@ if sidebar == pages[3]:
     date_debut = dt.datetime.combine(min(dates), dt.datetime.min.time())
     date_fin = dt.datetime.combine(max(dates), dt.datetime.max.time())
 
+    # ****************** Affichage de la table
     df_shown = df_cleaned.copy()
     df_shown = df_cleaned[(df_cleaned["date/heure avis"].between(date_debut, date_fin, inclusive= "both"))]
     df_shown = df_shown[attributs]
@@ -549,13 +554,22 @@ if sidebar == pages[3]:
                   "année expérience": st.column_config.NumberColumn(format= "%d"),
                   "année avis": st.column_config.NumberColumn(format= "%d"),
                   "date expérience": st.column_config.DateColumn()})
-    
-
     st.write("---")
 
+    # --------------- Affichage du graphique 1
+    st.subheader("1. [Graphique/chart 1]")
+    st.write("Description")
+    st.write("---")
 
-    st.subheader("1. [Visualisation 1]")
-    st.subheader("2. [Visualisation 2]")
+    # --------------- Affichage du graphique 2
+    st.subheader("2. [Graphique/chart 2]")
+    st.write("Description")
+    st.write("---")
+
+    # --------------- Affichage du graphique 3
+    st.subheader("3. [Graphique/chart 3]")
+    st.write("Description")
+    st.write("---")
 
 # ----------------- Page 4 "Préparation des données" ---------------------
 if sidebar == pages[4]:
