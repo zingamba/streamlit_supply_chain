@@ -513,10 +513,6 @@ if sidebar == pages[3]:
     st.write(intro)
     st.write("---")
 
-        # ****************** Séparation en colonne pour les filtres
-    st.write("#### Visualisation du jeu de données")
-    col1, col2, col3 = st.columns(3)
-
         # ****************** Texte d'aide sur le filtre
     h = """
     :red-background[- FILTRE QUI PERMET D'AFFICHER UN NOMBRE MAXIMAL D'AVIS.]  
@@ -525,15 +521,22 @@ if sidebar == pages[3]:
     :red-background[- Il est également possible d'élargir les colonnes du tableau.]
         """
     
-    # ****************** Création des filtres
-    nb_avis = col1.number_input(":green[Nombre d'avis max :]", min_value= 1, max_value= len(df_cleaned), value= 5, help= h)
-    
-    colonnes = col2.multiselect(":green[Attributs :]", df_cleaned.columns, placeholder= "...")
+        # ****************** Séparation en colonne pour les filtres
+    st.write("#### Visualisation du jeu de données")
+    colonnes = st.multiselect(":green[Attributs :]", df_cleaned.columns, placeholder= "...")
     attributs = list(df_cleaned.columns) if colonnes == list() else colonnes
+
+    col1, col2, col3 = st.columns(3)
+
+        # ****************** Création des filtres
+    nb_avis = col1.number_input(":green[Nombre d'avis max :]", min_value= 1, max_value= len(df_cleaned), value= 5, help= h)
+
+    notes = col2.multiselect(":green[Note :]", sorted(df_cleaned["note"].unique(), reverse= True), placeholder= "...")
+    notes = list(df_cleaned["note"].unique()) if notes == list() else notes
 
     min_date = df_cleaned["date/heure avis"].min()
     max_date = df_cleaned["date/heure avis"].max()
-    dates = col3.date_input(":green[Date/période d'avis :]",
+    dates = col3.date_input(":green[Date ou période de l'avis :]",
                       value= (max_date - dt.timedelta(days= 5), max_date),
                       min_value= min_date, max_value= max_date,
                       format="YYYY-MM-DD")
@@ -542,13 +545,18 @@ if sidebar == pages[3]:
 
     # ****************** Affichage de la table
     df_shown = df_cleaned.copy()
-    df_shown = df_cleaned[(df_cleaned["date/heure avis"].between(date_debut, date_fin, inclusive= "both"))]
+    df_shown = df_shown[(df_shown["date/heure avis"].between(date_debut, date_fin, inclusive= "both"))]
+    df_shown = df_shown[(df_shown["note"].isin(notes))]
     df_shown = df_shown[attributs]
     df_shown = df_shown.head(nb_avis)
+
+    st.write(f"Affichage de **{len(df_shown)}** avis le/les plus récents")
     if str(date_fin).split(' ')[0] != str(date_debut).split(' ')[0]:
-        st.write(f"**{len(df_shown)}** avis le/les plus récents laissés entre le **{str(date_fin).split(' ')[0]}** et le **{str(date_debut).split(' ')[0]}**.")
+        st.write(f"Laissés entre le **{str(date_fin).split(' ')[0]}** et le **{str(date_debut).split(' ')[0]}**.")
     else:
-        st.write(f"**{len(df_shown)}** avis le/les plus récents laissés le **{str(date_fin).split(' ')[0]}**.")
+        st.write(f"Laissés le **{str(date_fin).split(' ')[0]}**.")
+    st.write(f"Avec une note de **{str(sorted(notes, reverse= True)).replace('[', '').replace(']', '').replace(',', ' ou')}** étoiles")
+
     st.dataframe(df_shown, column_config= 
                  {"_index": st.column_config.NumberColumn(format= "%d"),
                   "année expérience": st.column_config.NumberColumn(format= "%d"),
