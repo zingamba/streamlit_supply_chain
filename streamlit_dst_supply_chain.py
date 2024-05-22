@@ -500,7 +500,7 @@ if sidebar == pages[2]:
         st.text(s)
 
     if st.toggle("Lignes du dataset après nettoyage et réajustement", key= 18):
-        number = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df_cleaned), value= 5, key= 21)
+        number = st.number_input(":green[Nombre de lignes à afficher :]", min_value=1, max_value= len(df_cleaned), value= 5, key= 21)
         st.dataframe(df_cleaned.head(number), hide_index= True)
 
 # ----------------- Page 3 "Quelques datavisualisations" -----------------
