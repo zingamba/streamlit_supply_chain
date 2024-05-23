@@ -33,10 +33,11 @@ df_cleaned["date expérience"] = pd.to_datetime(df_cleaned["date expérience"])
 
 
 # ----------------- Titre   --------------------------------------------
+st.title("")
 title = ":orange[Leboncoin] vs :green[Vinted]"
 col1, col2, col3 = st.columns([1, 0.1, 1.9])
-col1.image("./images/leboncoin-logo.svg", width= 220)
 col2.subheader("*/*")
+col1.image("./images/leboncoin-logo.svg", width= 220)
 col3.image("./images/vinted-logo.svg", width= 130)
 
 
@@ -591,8 +592,13 @@ if sidebar == pages[3]:
     st.write("---")
 
     # --------------- Affichage du graphique 2
-    st.subheader("2. [Graphique/chart 2]")
+    st.subheader("2. Notes et pays")
     st.write("Description")
+
+    df = pd.DataFrame(np.random.randn(1000, 2) / [50, 50] + [37.76, -122.4], columns=['lat', 'lon'])
+    st.dataframe(df)
+    st.map(df)
+
     st.write("---")
 
     # --------------- Affichage du graphique 3
