@@ -7,7 +7,8 @@ import numpy as np
 import seaborn as sns
 import streamlit as st
 import io
-import random
+import matplotlib.pyplot as plt
+import seaborn as sns
 # ---------------------------------------------------------------
 
 # ****************************************************************************************************************
@@ -25,26 +26,6 @@ file_cleaned = "draft_avis-leboncoin-vinted-truspilot.csv"
 df_cleaned = pd.read_csv(file_cleaned, sep= ",")
 df_cleaned["date/heure avis"] = pd.to_datetime(df_cleaned["date/heure avis"])
 df_cleaned["date expérience"] = pd.to_datetime(df_cleaned["date expérience"])
-df_cleaned = df_cleaned.set_index("id avis")
-
-
-# -------------------------- TRAITEMENT -------------------------
-# # Chargement des données brutes de Leboncoin dans df_leboncoin
-# df_leboncoin = pd.read_csv(file_leboncoin, sep= ",")
-# df_leboncoin = df_leboncoin.rename(columns= {"Unnamed: 0": "id avis", "date de visite": "date expérience",
-#                         "nb total avis": "nombre total avis", "date de l'avis (GMT+0)": "date/heure avis"})
-# df_leboncoin = df_leboncoin.set_index("id avis")
-
-# # Chargement des données brutes de Vinted dans df_vinted
-# df_vinted = pd.read_csv(file_vinted, sep= ",")
-# df_vinted = df_vinted.rename(columns= {"Unnamed: 0": "id avis", "date de visite": "date expérience",
-#                         "nb total avis": "nombre total avis", "date de l'avis (GMT+0)": "date/heure avis"})
-# df_vinted = df_vinted.set_index("id avis")
-
-# # Tri par date d'avis du plus récent au moins récent
-# df_leboncoin = df_leboncoin.sort_values(by= "date/heure avis", ascending= False)
-# df_vinted = df_vinted.sort_values(by= "date/heure avis", ascending= False)
-
 
 # ****************************************************************************************************************
 # FIN CODE DE BASE POUR LE NETTOYAGE ET RÉUNIFICATION DES TABLES BRUTES LEBONCOIN ET VINTED
@@ -61,7 +42,7 @@ col3.image("./images/vinted-logo.svg", width= 130)
 
 # ----------------  Sidebar   ------------------------------------------
 pages = ["Le projet", "Obtention des données", "Nettoyage du jeu de données", "Quelques visualisations", 
-         "Préparation des données", "Machine learning", "Conclusion et perspectives"]
+         "Préparation des données", "Machine learning", "Conclusion"]
 auteurs = """
         Auteur1  
         Auteur2  
@@ -78,22 +59,22 @@ st.sidebar.write(auteurs)
 if sidebar == pages[0]:
     st.header(pages[0])
     presentation = """
-                Ce projet a été réalisés dans le cadre de notre formation en data science délivrée par 
-                [Datascientest](https://datascientest.com/formation-data-scientist). 
-                Nous nous sommes intéressés à Leboncoin et Vinted : deux entreprises majeures, concurrentes et spécialisées dans la 
-                publication de petites annonces en ligne pour la vente de biens de particulier à particulier.\n
-                En 2024, Leboncoin.fr (entreprise française) est le 2e site e-commerce le plus consulté en France avec un traffic moyen de 
-                28 millions de visiteurs uniques par mois.\n
-                Tandis que Vinted.fr (entreprise lithuanienne), avec 16 millions de visiteurs uniques mensuel, est le 4ème site e-commerce
-                le plus consulté en France.\n
-                """
+    Ce projet a été réalisés dans le cadre de notre formation en data science délivrée par 
+    [Datascientest](https://datascientest.com/formation-data-scientist). 
+    Nous nous sommes intéressés à Leboncoin et à Vinted : deux entreprises majeures, concurrentes et spécialisées dans la 
+    publication de petites annonces en ligne pour la vente de biens de particulier à particulier.\n
+    En 2024, Leboncoin.fr (entreprise française) est le 2e site e-commerce le plus consulté en France avec un traffic moyen de 
+    28 millions de visiteurs uniques par mois.\n
+    Tandis que Vinted.fr (entreprise lithuanienne), avec 16 millions de visiteurs uniques mensuel, est le 4ème site e-commerce
+    le plus consulté en France.\n
+    """
 
     objectif = """
-                L'objectif du projet est de *PRÉDIRE* la note de satisfaction que laisserait un client à propos de ces deux entreprises 
-                sur une plateforme d'avis en ligne, en l'occurence Truspilot.
-                \nCe streamlit présente notre démarche pour mener à bien ce projet, depuis la construction du jeu de données jusqu'à 
-                la mise en place d'algorithmes de Machine Learning pour prédire les résultats des notes. N'hésitez pas à tester.
-                """
+    L'objectif du projet est de *PRÉDIRE* la note de satisfaction que laisserait un client à propos de ces deux entreprises 
+    sur une plateforme d'avis en ligne, en l'occurence Truspilot.
+    \nCe streamlit présente notre démarche pour mener à bien ce projet, depuis la construction du jeu de données jusqu'à 
+    la mise en place d'algorithmes de Machine Learning pour prédire les résultats des notes. N'hésitez pas à tester.
+    """
 
     st.subheader("1. Présentation")
     st.write(presentation)
@@ -105,31 +86,32 @@ if sidebar == pages[1]:
     st.header(pages[1])
 
     source = """ 
-                Les données ont été collectées à partir :
-                - [Des derniers avis clients déposés sur Truspilot pour Leboncoin](https://fr.trustpilot.com/review/www.leboncoin.fr?languages=all&sort=recency)
-                - [Des derniers avis clients déposés sur Truspilot pour Vinted](https://fr.trustpilot.com/review/vinted.fr?languages=all&sort=recency)
+    Les données ont été collectées à partir :
+    - [Des derniers avis clients déposés sur Truspilot pour Leboncoin](https://fr.trustpilot.com/review/www.leboncoin.fr?languages=all&sort=recency)
+    - [Des derniers avis clients déposés sur Truspilot pour Vinted](https://fr.trustpilot.com/review/vinted.fr?languages=all&sort=recency)
 
-                En effet, pour prédire la note d'un client, il est nécessaire d'identifier les entités importantes d’un avis : la note, la localisation, 
-                le nom de l'entreprise, la date, ....  
-                Mais aussi le commentaire laissé par le client afin d'en extraire le propos global : article défectueux ou conforme? 
-                livraison correcte ou problématique? sentiment? ...\n
-                Ne disposant pas d'une base consolidées avec ces informations, il est apparu nécessaire d'aller collecter ces données directement depuis
-                la plateforme d'avis clients Trustpilot.
-                """
+    En effet, pour prédire la note d'un client, il est nécessaire d'identifier les entités importantes d’un avis : la note, la localisation, 
+    le nom de l'entreprise, la date, ....  
+    Mais aussi le commentaire laissé par le client afin d'en extraire le propos global : article défectueux ou conforme? 
+    livraison correcte ou problématique? sentiment? ...\n
+    Ne disposant pas d'une base consolidées avec ces informations, il est apparu nécessaire d'aller collecter ces données directement depuis
+    la plateforme d'avis clients Trustpilot.
+    """
 
     webscrapping = """
-                Grâce à la bibliothèque :orange[***BeautifulSoup***] de python, un programme a été rédigé afin de collecter les données 
-                en "webscrappant" le site Trustpilot.
-                - Afin d'avoir un jeu de données  consistant, mais aussi pour avoir des avis étalés sur plusieurs mois, le code mis en place 
-                a permis de récupérer la totalité des avis publiés pour Vinted.  
-                25.009 avis à la date d'exécution du code.
-                - Afin d'avoir un jeu données équilibré pour les deux entreprises, à la même date, les 25.000 derniers avis publiés pour Leboncoin 
-                ont également été récoltés.\n
-                Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.\n
-                **Note :** Plus loin dans le projet, nous nous servirons de la bibliothèque :orange[***Selenium***] pour nous connecter à Google
-                traduction. Puis pour chaque avis : détecter, récupérer sa langue de rédaction et traduire automatiquement son titre/commentaire
-                sauf si c'est déjà rédigés en français.
-                """
+    Grâce à la bibliothèque :orange[***BeautifulSoup***] de python, un programme a été rédigé afin de collecter les données 
+    en "webscrappant" le site Trustpilot.
+    - Afin d'avoir un jeu de données  consistant, mais aussi pour avoir des avis étalés sur plusieurs mois, le code mis en place 
+    a permis de récupérer la totalité des avis publiés pour Vinted.  
+    25.009 avis à la date d'exécution du code.
+    - Afin d'avoir un jeu données équilibré pour les deux entreprises, à la même date, les 25.000 derniers avis publiés pour Leboncoin 
+    ont également été récoltés.\n
+    Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.\n
+    
+    ***Note** : Plus loin dans le projet, nous nous servirons de la bibliothèque :orange[**Selenium**] pour nous connecter à Google traduction.*  
+    *Puis pour chaque avis : détecter, récupérer sa langue de rédaction et traduire automatiquement son titre/commentaire
+    sauf s'ils sont déjà rédigés en français.*
+    """
     st.subheader("1. Sources de données")
     st.write(source)
     st.subheader("2. Web scrapping")
@@ -356,42 +338,42 @@ if sidebar == pages[2]:
 
     # --------------- Ajout des colonnes semaine/jour/mois/année pour les dates de l'expérience
     ajout_col_date_exp = """
-            Décomposition de l'attribut :orange[**date de l'expérience**] afin de récupérer la semaine, le jour de semaine,
-            le jour de mois, le mois et l'année. 
-            """
+    Décomposition de l'attribut :orange[**date de l'expérience**] afin de récupérer la semaine, le jour de semaine,
+    le jour de mois, le mois et l'année. 
+    """
     
     st.subheader("6. Ajout des colonnes semaine/jour/mois/année à partir de la date de l'expérience")
     st.write(ajout_col_date_exp)
 
     if st.toggle(":green[Afficher le code]", key= 14):
         code = """
-            # Ajout de la colonne semaine expérience
-            df_leboncoin["semaine expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.week)
-            df_vinted["semaine expérience"] = df_vinted["date expérience"].apply(lambda date: date.week)
+        # Ajout de la colonne semaine expérience
+        df_leboncoin["semaine expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.week)
+        df_vinted["semaine expérience"] = df_vinted["date expérience"].apply(lambda date: date.week)
 
-            # Ajout de la colonne jour de semaine de l'expérience
-            df_leboncoin["jour semaine expérience"] = df_leboncoin["date expérience"].apply(func_get_weekday)
-            df_vinted["jour semaine expérience"] = df_vinted["date expérience"].apply(func_get_weekday)
+        # Ajout de la colonne jour de semaine de l'expérience
+        df_leboncoin["jour semaine expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.day_of_week)
+        df_vinted["jour semaine expérience"] = df_vinted["date expérience"].apply(lambda date: date.day_of_week)
 
-            # Ajout de la colonne jour du mois de l'expérience
-            df_leboncoin["jour expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.day)
-            df_vinted["jour expérience"] = df_vinted["date expérience"].apply(lambda date: date.day)
+        # Ajout de la colonne jour du mois de l'expérience
+        df_leboncoin["jour expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.day)
+        df_vinted["jour expérience"] = df_vinted["date expérience"].apply(lambda date: date.day)
 
-            # Ajout de la colonne mois de l'expérience
-            df_leboncoin["mois expérience"] = df_leboncoin["date expérience"].apply(func_get_month)
-            df_vinted["mois expérience"] = df_vinted["date expérience"].apply(func_get_month)
+        # Ajout de la colonne mois de l'expérience
+        df_leboncoin["mois expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.month)
+        df_vinted["mois expérience"] = df_vinted["date expérience"].apply(lambda date: date.month)
 
-            # Ajout de la colonne année de l'expérience
-            df_leboncoin["année expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.year)
-            df_vinted["année expérience"] = df_vinted["date expérience"].apply(lambda date: date.year)
-            """
+        # Ajout de la colonne année de l'expérience
+        df_leboncoin["année expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.year)
+        df_vinted["année expérience"] = df_vinted["date expérience"].apply(lambda date: date.year)
+        """
         st.code(code)
 
     # --------------- Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis
     ajout_col_date_avis = """
-            Décomposition de l'attribut :orange[**date/heure avis**] afin de récupérer l'heure, la semaine, le jour de semaine, 
-            le jour de mois, le mois et l'année.
-            """
+    Décomposition de l'attribut :orange[**date/heure avis**] afin de récupérer l'heure, la semaine, le jour de semaine, 
+    le jour de mois, le mois et l'année.
+    """
     
     st.subheader("7. Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis")
     st.write(ajout_col_date_avis)
@@ -501,7 +483,7 @@ if sidebar == pages[2]:
 
     if st.toggle("Lignes du dataset après nettoyage et réajustement", key= 18):
         number = st.number_input(":green[Nombre de lignes à afficher :]", min_value=1, max_value= len(df_cleaned), value= 5, key= 21)
-        st.dataframe(df_cleaned.head(number), hide_index= True)
+        st.dataframe(df_cleaned.head(number))
 
 # ----------------- Page 3 "Quelques datavisualisations" -----------------
 if sidebar == pages[3]:
@@ -523,25 +505,30 @@ if sidebar == pages[3]:
     
         # ****************** Séparation en colonne pour les filtres
     st.write("#### Visualisation du jeu de données")
+    st.write("Filtrez la table pour sélectionner les attributs, le nombre de lignes à afficher, les notes, la date de publication, ou la période de publication.")
     colonnes = st.multiselect(":green[Attributs :]", df_cleaned.columns, placeholder= "...")
     attributs = list(df_cleaned.columns) if colonnes == list() else colonnes
 
     col1, col2, col3 = st.columns(3)
 
         # ****************** Création des filtres
-    nb_avis = col1.number_input(":green[Nombre d'avis max :]", min_value= 1, max_value= len(df_cleaned), value= 5, help= h)
+    nb_avis = col1.number_input(":green[Nombre d'avis max à afficher :]", min_value= 1, max_value= len(df_cleaned), value= len(df_cleaned), help= h)
 
     notes = col2.multiselect(":green[Note :]", sorted(df_cleaned["note"].unique(), reverse= True), placeholder= "...")
     notes = list(df_cleaned["note"].unique()) if notes == list() else notes
 
     min_date = df_cleaned["date/heure avis"].min()
     max_date = df_cleaned["date/heure avis"].max()
-    dates = col3.date_input(":green[Date ou période de l'avis :]",
-                      value= (max_date - dt.timedelta(days= 5), max_date),
+    dates = col3.date_input(":green[Date ou période des avis :]",
+                      value= (min_date, max_date),
                       min_value= min_date, max_value= max_date,
                       format="YYYY-MM-DD")
-    date_debut = dt.datetime.combine(min(dates), dt.datetime.min.time())
-    date_fin = dt.datetime.combine(max(dates), dt.datetime.max.time())
+    try:
+        date_debut = dt.datetime.combine(min(dates), dt.datetime.min.time())
+        date_fin = dt.datetime.combine(max(dates), dt.datetime.max.time())
+    except:
+        date_debut = dt.datetime.combine(min_date, dt.datetime.min.time())
+        date_fin = dt.datetime.combine(max_date, dt.datetime.max.time())
 
     # ****************** Affichage de la table
     df_shown = df_cleaned.copy()
@@ -550,11 +537,11 @@ if sidebar == pages[3]:
     df_shown = df_shown[attributs]
     df_shown = df_shown.head(nb_avis)
 
-    st.write(f"Affichage de **{len(df_shown)}** avis le/les plus récents")
+    st.write(f"**{len(df_shown)}** avis récupérés à partir des plus récents")
     if str(date_fin).split(' ')[0] != str(date_debut).split(' ')[0]:
-        st.write(f"Laissés entre le **{str(date_fin).split(' ')[0]}** et le **{str(date_debut).split(' ')[0]}**.")
+        st.write(f"Publiés entre le **{str(date_fin).split(' ')[0]}** et le **{str(date_debut).split(' ')[0]}**.")
     else:
-        st.write(f"Laissés le **{str(date_fin).split(' ')[0]}**.")
+        st.write(f"Publiés le **{str(date_fin).split(' ')[0]}**.")
     st.write(f"Avec une note de **{str(sorted(notes, reverse= True)).replace('[', '').replace(']', '').replace(',', ' ou')}** étoiles")
 
     st.dataframe(df_shown, column_config= 
@@ -565,8 +552,42 @@ if sidebar == pages[3]:
     st.write("---")
 
     # --------------- Affichage du graphique 1
-    st.subheader("1. [Graphique/chart 1]")
-    st.write("Description")
+    st.subheader("1. Corrélation entre les variables numériques")
+    correlation = """
+    Le graphique suivant affiche une matrice de corrélation entre les variables numériques du dataset.  
+    La corrélation est calculée avec la méthode de Pearson.
+    """
+    st.write(correlation)
+
+    # ****************** Création des filtres
+    quant_vars = ["note", "nombre total avis", "longueur titre", "longueur commentaire"]     # Variables quantitatives
+    temp_vars = ["jour semaine expérience", "semaine expérience", "jour expérience", "mois expérience", "année expérience", 
+                 "heure avis", "jour semaine avis", "semaine avis", "jour avis", "mois avis", "année avis"]  # Variables temporelles
+    entreprises = ["Leboncoin", "Vinted"]
+    
+    sel1 = st.multiselect(":green[Sélectionnez des variables quantitatives :]", quant_vars, default= quant_vars, placeholder= "...")
+    sel2 = st.multiselect(":green[Sélectionnez des variables temporelles :]", temp_vars, default= temp_vars, placeholder= "...")
+    col1, col2 = st.columns(2)
+    entreprises = col1.multiselect(":green[Sélectionnez la ou les plateformes :]", entreprises, default= entreprises, placeholder= "...")
+
+    # sel1 = quant_vars if sel1 == list() else sel1
+    # sel2 = temp_vars if sel2 == list() else sel2
+    # sel3 = entreprises if sel3 == list() else sel3
+    # st.text(sel2)
+    # ****************** Affichage du graphique
+    df_corr = df_cleaned[df_cleaned["entreprise"] == entreprises[0]] if len(entreprises) == 1 else df_cleaned.copy()
+    df_corr = df_corr[sel1 + sel2]
+    df_corr = df_corr.corr()
+    try:
+        fig, ax = plt.subplots(figsize= (11, 5))
+        if col2.checkbox(":green[Montrer les variables en corrélation forte]"):
+            df_corr = df_corr[(df_corr <= -0.5) | (df_corr >= 0.5)]
+            sns.heatmap(df_corr, cmap = "seismic", ax= ax, annot= True, fmt=".2f", linewidths= 0.5, linecolor= "lightgrey")
+        else:
+            sns.heatmap(df_corr, cmap = "seismic", ax= ax, annot= True, fmt=".2f")
+        st.pyplot(fig)
+    except:
+        st.write(":red[Oops... :sweat: veuillez choisir au moins une variable pour afficher la matrice de corrélation.]")
     st.write("---")
 
     # --------------- Affichage du graphique 2
