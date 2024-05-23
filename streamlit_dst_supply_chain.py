@@ -496,7 +496,11 @@ if sidebar == pages[3]:
     st.write(intro)
     st.write("---")
 
-        # ****************** Texte d'aide sur le filtre
+    # ********************************************************************
+    # ********************* Table du jeu de données **********************
+    # ********************************************************************
+
+    # Texte d'aide sur le filtre
     h = """
     :red-background[- FILTRE QUI PERMET D'AFFICHER UN NOMBRE MAXIMAL D'AVIS.]  
     :red-background[- Utilisez la loupe :mag: sur le tableau pour rechercher une valeur particulière dans le dataset.]  
@@ -504,26 +508,27 @@ if sidebar == pages[3]:
     :red-background[- Il est également possible d'élargir les colonnes du tableau.]
         """
     
-        # ****************** Séparation en colonne pour les filtres
-    st.write("#### Visualisation du jeu de données")
+    # Séparation en colonne pour les filtres
+    st.subheader("1. Table du jeu de données")
     st.write("Filtrez la table pour sélectionner les attributs, le nombre de lignes à afficher, les notes, la date de publication, ou la période de publication.")
-    colonnes = st.multiselect(":green[Attributs :]", df_cleaned.columns, placeholder= "...")
-    attributs = list(df_cleaned.columns) if colonnes == list() else colonnes
+    
 
-    col1, col2, col3 = st.columns(3)
+    # Création des filtres
+    with st.expander("###### **Filtres :**", expanded= True):
+        colonnes = st.multiselect(":green[Attributs :]", df_cleaned.columns, placeholder= "...")
+        attributs = list(df_cleaned.columns) if colonnes == list() else colonnes
 
-        # ****************** Création des filtres
-    nb_avis = col1.number_input(":green[Nombre d'avis max à afficher :]", min_value= 1, max_value= len(df_cleaned), value= len(df_cleaned), help= h)
+        col1, col2, col3 = st.columns(3)
+        nb_avis = col1.number_input(":green[Nombre d'avis max à afficher :]", min_value= 1, max_value= len(df_cleaned), value= len(df_cleaned), help= h)
+        notes = col2.multiselect(":green[Note :]", sorted(df_cleaned["note"].unique(), reverse= True), placeholder= "...")
+        notes = list(df_cleaned["note"].unique()) if notes == list() else notes
 
-    notes = col2.multiselect(":green[Note :]", sorted(df_cleaned["note"].unique(), reverse= True), placeholder= "...")
-    notes = list(df_cleaned["note"].unique()) if notes == list() else notes
-
-    min_date = df_cleaned["date/heure avis"].min()
-    max_date = df_cleaned["date/heure avis"].max()
-    dates = col3.date_input(":green[Date ou période des avis :]",
-                      value= (min_date, max_date),
-                      min_value= min_date, max_value= max_date,
-                      format="YYYY-MM-DD")
+        min_date = df_cleaned["date/heure avis"].min()
+        max_date = df_cleaned["date/heure avis"].max()
+        dates = col3.date_input(":green[Date ou période des avis :]",
+                        value= (min_date, max_date),
+                        min_value= min_date, max_value= max_date,
+                        format="YYYY-MM-DD")
     try:
         date_debut = dt.datetime.combine(min(dates), dt.datetime.min.time())
         date_fin = dt.datetime.combine(max(dates), dt.datetime.max.time())
@@ -531,13 +536,20 @@ if sidebar == pages[3]:
         date_debut = dt.datetime.combine(min_date, dt.datetime.min.time())
         date_fin = dt.datetime.combine(max_date, dt.datetime.max.time())
 
-    # ****************** Affichage de la table
+    # Affichage de la table
     df_shown = df_cleaned.copy()
     df_shown = df_shown[(df_shown["date/heure avis"].between(date_debut, date_fin, inclusive= "both"))]
     df_shown = df_shown[(df_shown["note"].isin(notes))]
     df_shown = df_shown[attributs]
     df_shown = df_shown.head(nb_avis)
 
+    st.dataframe(df_shown, column_config= 
+                 {"_index": st.column_config.NumberColumn(format= "%d"),
+                  "année expérience": st.column_config.NumberColumn(format= "%d"),
+                  "année avis": st.column_config.NumberColumn(format= "%d"),
+                  "date expérience": st.column_config.DateColumn()})
+
+    # Impression des résultats
     st.write(f"**{len(df_shown)}** avis récupérés à partir des plus récents")
     if str(date_fin).split(' ')[0] != str(date_debut).split(' ')[0]:
         st.write(f"Publiés entre le **{str(date_fin).split(' ')[0]}** et le **{str(date_debut).split(' ')[0]}**.")
@@ -545,54 +557,170 @@ if sidebar == pages[3]:
         st.write(f"Publiés le **{str(date_fin).split(' ')[0]}**.")
     st.write(f"Avec une note de **{str(sorted(notes, reverse= True)).replace('[', '').replace(']', '').replace(',', ' ou')}** étoiles")
 
-    st.dataframe(df_shown, column_config= 
-                 {"_index": st.column_config.NumberColumn(format= "%d"),
-                  "année expérience": st.column_config.NumberColumn(format= "%d"),
-                  "année avis": st.column_config.NumberColumn(format= "%d"),
-                  "date expérience": st.column_config.DateColumn()})
     st.write("---")
 
-    # --------------- Affichage du graphique 1
-    st.subheader("1. Corrélation entre les variables numériques")
-    correlation = """
-    Le graphique suivant affiche une matrice de corrélation entre les variables numériques du dataset.  
-    La corrélation est calculée avec la méthode de Pearson.
-    """
-    st.write(correlation)
+    # ********************************************************************
+    # ********************** Distribution des notes **********************
+    # ********************************************************************
+    st.subheader("2. Distribution des notes")
+    st.write("""
+             Afficher la distributions du nombre d'avis en fonction de la note, du pays.  
+             Ou encore en fonction de l'heure, du jour, du mois et de l'année de publication.
+             """)
+    
+    # Code couleur pour Leboncoin et Vinted
+    color_l = "#E67333"
+    color_v = "#337680"
 
-    # ****************** Création des filtres
+    # Création des filtres
+    liste_filtres = ["Valeur de la note", "Pays du client", "Heure de publication", "Jour de publication en semaine", 
+                     "Jour de publication dans le mois", "Mois de publication", "Année de publication"]
+    my_dict = {"Valeur de la note": "note", "Pays du client": "pays", "Heure de publication": "heure avis", 
+               "Jour de publication en semaine": "jour semaine avis", "Jour de publication dans le mois": "jour avis",
+               "Mois de publication": "mois avis", "Année de publication": "année avis"}
+    
+    with st.container(border= True):
+        type_filtre = st.selectbox("###### **Filtrer par :**", options= liste_filtres)
+    filtre = my_dict[type_filtre]
+
+    # Nombre d'avis en fonction de la valeur de "valeur de la note", "heure avis", "jour semaine avis", "jour avis", "année avis"
+    if filtre in ["note", "heure avis", "jour semaine avis", "jour avis", "année avis"]:
+        fig, ax = plt.subplots(figsize= (10, 5))
+        sns.countplot(x= df_cleaned[filtre], hue= df_cleaned["entreprise"], palette= [color_l, color_v], ax= ax)
+        plt.title(f"Nombre d'avis par : {type_filtre}")
+        plt.xlabel(type_filtre.capitalize())
+        plt.ylabel("Nombre d'avis")
+        plt.legend(title= "Entreprise")
+        st.pyplot(fig)
+    
+    # Nombre d'avis en fonction du "pays du client"
+    # -------- Construction des totaux France et Autres pays pour Leboncoin et Vinted
+    # Construction du total pour leboncoin
+    df_cleaned_lbc = df_cleaned[df_cleaned["entreprise"] == "Leboncoin"]
+    count_pays_lbc = df_cleaned_lbc["pays"].value_counts().reset_index()
+
+    # Construction du total pour la France
+    count_pays_lbc_FR = count_pays_lbc.iloc[0:1]
+
+    # Construction du total pour les autres pays
+    count_pays_lbc_AUTRES = count_pays_lbc.iloc[1:]
+    count_pays_lbc_AUTRES = count_pays_lbc_AUTRES["count"].sum()
+    count_pays_lbc_AUTRES = pd.DataFrame([["Autres pays", count_pays_lbc_AUTRES]], columns= ["pays", "count"])
+
+    # Finalisation leboncoin
+    count_pays_lbc = pd.concat([count_pays_lbc_FR, count_pays_lbc_AUTRES])
+    entreprise = ["Leboncoin"] * len(count_pays_lbc)
+    count_pays_lbc.insert(0, value= entreprise, column= "entreprise")
+
+    # ------------------------------------
+    # Construction du total pour vinted
+    df_cleaned_vinted = df_cleaned[df_cleaned["entreprise"] == "Vinted"]
+    count_pays_vinted = df_cleaned_vinted["pays"].value_counts().reset_index()
+
+    # Construction du total pour la France
+    count_pays_vinted_FR = count_pays_vinted.iloc[0:1]
+
+    # Construction du total pour les autres pays
+    count_pays_vinted_AUTRES = count_pays_vinted.iloc[1:]
+    count_pays_vinted_AUTRES = count_pays_vinted_AUTRES["count"].sum()
+    count_pays_vinted_AUTRES = pd.DataFrame([["Autres pays", count_pays_vinted_AUTRES]], columns= ["pays", "count"])
+
+    # Finalisation vinted
+    count_pays_vinted = pd.concat([count_pays_vinted_FR, count_pays_lbc_AUTRES])
+    entreprise = ["Vinted"] * len(count_pays_vinted)
+    count_pays_vinted.insert(0, value= entreprise, column= "entreprise")
+    
+    # ------------------------------------
+    count_pays = pd.concat([count_pays_lbc, count_pays_vinted])
+    # -------- Fin construction des totaux France et Autres pays pour Leboncoin et Vinted
+
+
+    if filtre == "pays":
+        # Affichage du graphique de Leboncoin
+        fig1, ax = plt.subplots(figsize= (10, 5))
+        sns.barplot(x= count_pays_lbc["pays"], y= count_pays_lbc["count"], palette= [color_l], ax= ax)
+        plt.title(f"Nombre d'avis par : {type_filtre}")
+        plt.xlabel(type_filtre.capitalize())
+        plt.ylabel("Nombre d'avis")
+        plt.legend(title= "Leboncoin")
+        st.pyplot(fig1)
+
+        # Affichage du graphique de Leboncoin
+        fig1, ax = plt.subplots(figsize= (10, 5))
+        sns.barplot(x= count_pays_vinted["pays"], y= count_pays_vinted["count"], palette= [color_v], ax= ax)
+        plt.title(f"Nombre d'avis par : {type_filtre}")
+        plt.xlabel(type_filtre.capitalize())
+        plt.ylabel("Nombre d'avis")
+        plt.legend(title= "Vinted")
+        st.pyplot(fig1)
+    
+    # Nombre d'avis en fonction du "mois de publication"
+    if filtre == "mois avis":
+        fig, ax = plt.subplots(figsize= (10, 5))
+        sns.countplot(x= df_cleaned["mois"], hue= df_cleaned["entreprise"], palette= [color_l, color_v], ax= ax)
+        plt.title(f"Nombre d'avis par : {type_filtre}")
+        plt.xlabel(type_filtre.capitalize())
+        plt.ylabel("Nombre d'avis")
+        plt.legend(title= "Entreprise")
+        st.pyplot(fig)
+
+    st.write("---")
+
+    # ********************************************************************
+    # ************* Corrélation entre les variables numériques ***********
+    # ********************************************************************
+    st.subheader("3. Corrélation entre les variables numériques")
+    st.write("""  
+             Filtrer la matrice en choisissant des variables numériques et/ou temporelles et en sélectionnant les entreprises.  
+             Il est également possible de n'affichez que les variables fortement corrélées entre elles.  
+             La corrélation est calculée avec la 
+             [*méthode de Bravais-Pearson*](https://fr.wikipedia.org/wiki/Corr%C3%A9lation_(statistiques)#D%C3%A9finition).
+             """)
+
+    # Création des filtres
     quant_vars = ["note", "nombre total avis", "longueur titre", "longueur commentaire"]     # Variables quantitatives
     temp_vars = ["jour semaine expérience", "semaine expérience", "jour expérience", "mois expérience", "année expérience", 
                  "heure avis", "jour semaine avis", "semaine avis", "jour avis", "mois avis", "année avis"]  # Variables temporelles
     entreprises = ["Leboncoin", "Vinted"]
     
-    sel1 = st.multiselect(":green[Sélectionnez des variables quantitatives :]", quant_vars, default= quant_vars, placeholder= "...")
-    sel2 = st.multiselect(":green[Sélectionnez des variables temporelles :]", temp_vars, default= temp_vars, placeholder= "...")
-    col1, col2 = st.columns(2)
-    entreprises = col1.multiselect(":green[Sélectionnez la ou les plateformes :]", entreprises, default= entreprises, placeholder= "...")
+    with st.expander("###### **Filtres :**", expanded= False):
+        sel1 = st.multiselect(":green[Sélectionnez des variables quantitatives :]", quant_vars, default= quant_vars, placeholder= "...")
+        sel2 = st.multiselect(":green[Sélectionnez des variables temporelles :]", temp_vars, default= temp_vars, placeholder= "...")
+        entreprises = st.multiselect(":green[Sélectionnez la ou les plateformes :]", entreprises, default= entreprises, placeholder= "...")
 
-    # sel1 = quant_vars if sel1 == list() else sel1
-    # sel2 = temp_vars if sel2 == list() else sel2
-    # sel3 = entreprises if sel3 == list() else sel3
-    # st.text(sel2)
-    # ****************** Affichage du graphique
+    # Affichage du graphique
     df_corr = df_cleaned[df_cleaned["entreprise"] == entreprises[0]] if len(entreprises) == 1 else df_cleaned.copy()
     df_corr = df_corr[sel1 + sel2]
     df_corr = df_corr.corr()
     try:
+        col1, col2 = st.columns(2)
         fig, ax = plt.subplots(figsize= (11, 5))
-        if col2.checkbox(":green[Montrer les variables en corrélation forte]"):
+        if col2.checkbox("**Montrer les variables en corrélation forte**"):
             df_corr = df_corr[(df_corr <= -0.5) | (df_corr >= 0.5)]
-            sns.heatmap(df_corr, cmap = "seismic", ax= ax, annot= True, fmt=".2f", linewidths= 0.5, linecolor= "lightgrey")
+            sns.heatmap(df_corr, cmap = "seismic", ax= ax, annot= True, fmt=".2f", vmin= -1, vmax= 1, linewidths= 0.1, linecolor= "lightgrey")
         else:
-            sns.heatmap(df_corr, cmap = "seismic", ax= ax, annot= True, fmt=".2f")
+            sns.heatmap(df_corr, cmap = "seismic", ax= ax, annot= True, fmt=".2f", vmin= -1, vmax= 1, linewidths= 0.1, linecolor= "lightgrey")
         st.pyplot(fig)
     except:
         st.write(":red[Oops... :sweat: veuillez choisir au moins une variable pour afficher la matrice de corrélation.]")
+    
+    # Commentaires du graphique
+    with st.expander("###### **Commentaires**"):
+        st.write("""
+        À compléter
+        """)
+        
     st.write("---")
 
+    # ********************************************************************
+    # ********************* Répartition géographique *********************
+    # ********************************************************************
     # --------------- Affichage du graphique 2
-    st.subheader("2. Notes et pays")
+    st.subheader("4. Répartition géographique")
+    st.write("""
+             Le graphique suivant affiche plusieurs types de distributions du nombre de notes en fonction de la valeur de la note,
+             du pays, de l'entreprise, de l'heure, du jour de semaine, du jour du mois, du mois ou encore de l'année.
+             """)
     st.write("Description")
 
     df = pd.DataFrame(np.random.randn(1000, 2) / [50, 50] + [37.76, -122.4], columns=['lat', 'lon'])
