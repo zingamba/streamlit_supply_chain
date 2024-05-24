@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 # ---------------------------------------------------------------
 
-# ****************************************************************************************************************
+# --------------------------------------------------------------------********************************************
 # CODE DE BASE POUR LE NETTOYAGE ET RÉUNIFICATION DES TABLES BRUTES LEBONCOIN ET VINTED
-# ****************************************************************************************************************
+# --------------------------------------------------------------------********************************************
 
 # ------------ INITIALISATION DES VARIABLES GLOBALES ------------
 file_leboncoin = "25000-reviews_leboncoin_trustpilot_scrapping.csv"
@@ -27,9 +27,9 @@ df_cleaned = pd.read_csv(file_cleaned, sep= ",")
 df_cleaned["date/heure avis"] = pd.to_datetime(df_cleaned["date/heure avis"])
 df_cleaned["date expérience"] = pd.to_datetime(df_cleaned["date expérience"])
 
-# ****************************************************************************************************************
+# --------------------------------------------------------------------********************************************
 # FIN CODE DE BASE POUR LE NETTOYAGE ET RÉUNIFICATION DES TABLES BRUTES LEBONCOIN ET VINTED
-# ****************************************************************************************************************
+# --------------------------------------------------------------------********************************************
 
 
 # ----------------- Titre   --------------------------------------------
@@ -496,9 +496,9 @@ if sidebar == pages[3]:
     st.write(intro)
     st.write("---")
 
-    # ********************************************************************
+    # --------------------------------------------------------------------
     # ********************* Table du jeu de données **********************
-    # ********************************************************************
+    # --------------------------------------------------------------------
 
     # Texte d'aide sur le filtre
     h = """
@@ -559,12 +559,12 @@ if sidebar == pages[3]:
 
     st.write("---")
 
-    # ********************************************************************
-    # ********************** Distribution des notes **********************
-    # ********************************************************************
-    st.subheader("2. Distribution des notes")
+    # --------------------------------------------------------------------
+    # *************** Répartition du nombre total des notes **************
+    # --------------------------------------------------------------------
+    st.subheader("2. Répartition du nombre total d'avis")
     st.write("""
-             Afficher la distributions du nombre d'avis en fonction de la note, du pays.  
+             Afficher la répartition du nombre d'avis en fonction de la note, du pays.  
              Ou encore en fonction de l'heure, du jour, du mois et de l'année de publication.
              """)
     
@@ -583,92 +583,39 @@ if sidebar == pages[3]:
         type_filtre = st.selectbox("###### **Filtrer par :**", options= liste_filtres)
     filtre = my_dict[type_filtre]
 
-    # Nombre d'avis en fonction de la valeur de "valeur de la note", "heure avis", "jour semaine avis", "jour avis", "année avis"
-    if filtre in ["note", "heure avis", "jour semaine avis", "jour avis", "année avis"]:
+    # Nombre d'avis en fonction de la valeur de "valeur de la note", "heure avis", "jour semaine avis", "jour avis", "mois avis", "année avis"
+    if filtre in ["note", "heure avis", "jour semaine avis", "jour avis", "mois avis", "année avis"]:
         fig, ax = plt.subplots(figsize= (10, 5))
         sns.countplot(x= df_cleaned[filtre], hue= df_cleaned["entreprise"], palette= [color_l, color_v], ax= ax)
         plt.title(f"Nombre d'avis par : {type_filtre}")
-        plt.xlabel(type_filtre.capitalize())
+        plt.xlabel(type_filtre.capitalize() + (f" (nombre d'étoiles)" if filtre == "note" else ""))
         plt.ylabel("Nombre d'avis")
         plt.legend(title= "Entreprise")
+
+        # Affichage des noms de jours si filtre sur le jour
+        if (filtre == "jour semaine avis") :
+            my_dict = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
+            plt.xticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
         st.pyplot(fig)
     
     # Nombre d'avis en fonction du "pays du client"
-    # -------- Construction des totaux France et Autres pays pour Leboncoin et Vinted
-    # Construction du total pour leboncoin
-    df_cleaned_lbc = df_cleaned[df_cleaned["entreprise"] == "Leboncoin"]
-    count_pays_lbc = df_cleaned_lbc["pays"].value_counts().reset_index()
-
-    # Construction du total pour la France
-    count_pays_lbc_FR = count_pays_lbc.iloc[0:1]
-
-    # Construction du total pour les autres pays
-    count_pays_lbc_AUTRES = count_pays_lbc.iloc[1:]
-    count_pays_lbc_AUTRES = count_pays_lbc_AUTRES["count"].sum()
-    count_pays_lbc_AUTRES = pd.DataFrame([["Autres pays", count_pays_lbc_AUTRES]], columns= ["pays", "count"])
-
-    # Finalisation leboncoin
-    count_pays_lbc = pd.concat([count_pays_lbc_FR, count_pays_lbc_AUTRES])
-    entreprise = ["Leboncoin"] * len(count_pays_lbc)
-    count_pays_lbc.insert(0, value= entreprise, column= "entreprise")
-
-    # ------------------------------------
-    # Construction du total pour vinted
-    df_cleaned_vinted = df_cleaned[df_cleaned["entreprise"] == "Vinted"]
-    count_pays_vinted = df_cleaned_vinted["pays"].value_counts().reset_index()
-
-    # Construction du total pour la France
-    count_pays_vinted_FR = count_pays_vinted.iloc[0:1]
-
-    # Construction du total pour les autres pays
-    count_pays_vinted_AUTRES = count_pays_vinted.iloc[1:]
-    count_pays_vinted_AUTRES = count_pays_vinted_AUTRES["count"].sum()
-    count_pays_vinted_AUTRES = pd.DataFrame([["Autres pays", count_pays_vinted_AUTRES]], columns= ["pays", "count"])
-
-    # Finalisation vinted
-    count_pays_vinted = pd.concat([count_pays_vinted_FR, count_pays_lbc_AUTRES])
-    entreprise = ["Vinted"] * len(count_pays_vinted)
-    count_pays_vinted.insert(0, value= entreprise, column= "entreprise")
-    
-    # ------------------------------------
-    count_pays = pd.concat([count_pays_lbc, count_pays_vinted])
-    # -------- Fin construction des totaux France et Autres pays pour Leboncoin et Vinted
-
-
     if filtre == "pays":
         # Affichage du graphique de Leboncoin
+        df_cleaned_pays = df_cleaned.copy()
+        df_cleaned_pays["pays"] = df_cleaned_pays["pays"].apply(lambda x: "Autres pays" if x not in ["FR"] else x)
         fig1, ax = plt.subplots(figsize= (10, 5))
-        sns.barplot(x= count_pays_lbc["pays"], y= count_pays_lbc["count"], palette= [color_l], ax= ax)
+        sns.countplot(x= df_cleaned_pays["pays"], hue= df_cleaned_pays["entreprise"], legend= "full", palette= [color_l, color_v], ax= ax)
         plt.title(f"Nombre d'avis par : {type_filtre}")
-        plt.xlabel(type_filtre.capitalize())
+        plt.xlabel(type_filtre.capitalize())        
         plt.ylabel("Nombre d'avis")
-        plt.legend(title= "Leboncoin")
+        #plt.legend(title= "Entreprise")
         st.pyplot(fig1)
-
-        # Affichage du graphique de Leboncoin
-        fig1, ax = plt.subplots(figsize= (10, 5))
-        sns.barplot(x= count_pays_vinted["pays"], y= count_pays_vinted["count"], palette= [color_v], ax= ax)
-        plt.title(f"Nombre d'avis par : {type_filtre}")
-        plt.xlabel(type_filtre.capitalize())
-        plt.ylabel("Nombre d'avis")
-        plt.legend(title= "Vinted")
-        st.pyplot(fig1)
-    
-    # Nombre d'avis en fonction du "mois de publication"
-    if filtre == "mois avis":
-        fig, ax = plt.subplots(figsize= (10, 5))
-        sns.countplot(x= df_cleaned["mois"], hue= df_cleaned["entreprise"], palette= [color_l, color_v], ax= ax)
-        plt.title(f"Nombre d'avis par : {type_filtre}")
-        plt.xlabel(type_filtre.capitalize())
-        plt.ylabel("Nombre d'avis")
-        plt.legend(title= "Entreprise")
-        st.pyplot(fig)
 
     st.write("---")
 
-    # ********************************************************************
+    # --------------------------------------------------------------------
     # ************* Corrélation entre les variables numériques ***********
-    # ********************************************************************
+    # --------------------------------------------------------------------
     st.subheader("3. Corrélation entre les variables numériques")
     st.write("""  
              Filtrer la matrice en choisissant des variables numériques et/ou temporelles et en sélectionnant les entreprises.  
@@ -693,9 +640,8 @@ if sidebar == pages[3]:
     df_corr = df_corr[sel1 + sel2]
     df_corr = df_corr.corr()
     try:
-        col1, col2 = st.columns(2)
         fig, ax = plt.subplots(figsize= (11, 5))
-        if col2.checkbox("**Montrer les variables en corrélation forte**"):
+        if st.checkbox("**Montrer les variables en corrélation forte**"):
             df_corr = df_corr[(df_corr <= -0.5) | (df_corr >= 0.5)]
             sns.heatmap(df_corr, cmap = "seismic", ax= ax, annot= True, fmt=".2f", vmin= -1, vmax= 1, linewidths= 0.1, linecolor= "lightgrey")
         else:
@@ -712,11 +658,60 @@ if sidebar == pages[3]:
         
     st.write("---")
 
-    # ********************************************************************
+    # --------------------------------------------------------------------
+    # ************************ Distribution des données ***************************
+    # --------------------------------------------------------------------
+    st.subheader("4. Distribution des données")
+    st.write("""  
+             Filtrer le graphique en choisissant deux variables pour lesquelles afficher la distribution.
+             Il possible d'afficher la distribution pour une seule entreprise, ou les deux.
+             """)
+
+    # Création des filtres
+    quant_vars = ["note", "nombre total avis", "longueur titre", "longueur commentaire"]     # Variables quantitatives
+    temp_vars = ["jour semaine expérience", "semaine expérience", "jour expérience", "mois expérience", "année expérience", 
+                 "heure avis", "jour semaine avis", "semaine avis", "jour avis", "mois avis", "année avis"]  # Variables temporelles
+    entreprises = ["Leboncoin", "Vinted"]
+    
+    with st.expander("###### **Filtres :**", expanded= True):
+        sel1 = st.selectbox("x =", options= ["note", "jour semaine expérience", "année expérience",
+                                             "jour semaine avis", "année avis"], index= 0, placeholder= "")
+        sel2 = st.selectbox("y =", options= quant_vars + temp_vars, index= 3, placeholder= "")
+        entreprises = st.multiselect(":green[Sélectionnez la ou les plateformes :]", entreprises, default= entreprises, placeholder= "")
+
+    # Affichage de la distribution des avis
+    df_cleaned_pays_dist = df_cleaned[df_cleaned["entreprise"] == entreprises[0]] if len(entreprises) == 1 else df_cleaned
+    if (sel1 in (quant_vars + temp_vars)) and (sel2 in (quant_vars + temp_vars)):
+        fig, ax = plt.subplots(figsize= (10, 5))
+
+        # Masque des valeurs extrêmes
+        if st.checkbox("**Masquer les valeurs extrêmes**") :
+            sns.boxplot(x= df_cleaned_pays_dist[sel1], y= df_cleaned_pays_dist[sel2], showfliers = False,
+                        hue= df_cleaned_pays_dist["entreprise"], palette= [color_l, color_v])
+        else:
+            sns.boxplot(x= df_cleaned_pays_dist[sel1], y= df_cleaned_pays_dist[sel2], showfliers = True,
+                        hue= df_cleaned_pays_dist["entreprise"], palette= [color_l, color_v])
+        plt.title(f"Distribution entre : {sel1.upper()} et {sel2.upper()}")
+        plt.xlabel(sel1)
+        plt.ylabel(sel2)
+        plt.legend(title= "Entreprise")
+
+        # Affichage des noms de jours si filtre sur le jour
+        if (sel1 == "jour semaine avis") or (sel1 == "jour semaine expérience"):
+            my_dict = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
+            plt.xticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
+        if (sel2 == "jour semaine avis") or (sel2 == "jour semaine expérience"):
+            my_dict = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
+            plt.yticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
+
+        st.pyplot(fig)
+    st.write("---")
+
+    # --------------------------------------------------------------------
     # ********************* Répartition géographique *********************
-    # ********************************************************************
+    # --------------------------------------------------------------------
     # --------------- Affichage du graphique 2
-    st.subheader("4. Répartition géographique")
+    st.subheader("5. Répartition géographique")
     st.write("""
              Le graphique suivant affiche plusieurs types de distributions du nombre de notes en fonction de la valeur de la note,
              du pays, de l'entreprise, de l'heure, du jour de semaine, du jour du mois, du mois ou encore de l'année.
@@ -729,12 +724,10 @@ if sidebar == pages[3]:
 
     st.write("---")
 
-    # --------------- Affichage du graphique 3
-    st.subheader("3. [Graphique/chart 3]")
-    st.write("Description")
-    st.write("---")
 
-# ----------------- Page 4 "Préparation des données" ---------------------
+# *************************************************************************************************************
+# ************************************* PAGE 4 : "PRÉPARATION DES DONNÉES" ************************************
+# *************************************************************************************************************
 if sidebar == pages[4]:
     intro = """ 
             L'objectif du projet s'apparente à un problème de regression.  
