@@ -618,7 +618,8 @@ if sidebar == pages[3]:
     # --------------------------------------------------------------------
     st.subheader("3. Corrélation entre les variables numériques")
     st.write("""  
-             Filtrer la matrice en choisissant des variables numériques/temporelles et en sélectionnant des entreprises.  
+             Filtrer la matrice en choisissant des variables numériques et/ou temporelles.  
+             Il possible d'afficher la corrélation entre les variables d'une seule entreprise, ou des deux.  
              Il est également possible de n'affichez que les variables fortement corrélées entre elles.  
              La corrélation est calculée avec la 
              [*méthode de Bravais-Pearson*](https://fr.wikipedia.org/wiki/Corr%C3%A9lation_(statistiques)#D%C3%A9finition).
@@ -663,8 +664,9 @@ if sidebar == pages[3]:
     # --------------------------------------------------------------------
     st.subheader("4. Distribution des données")
     st.write("""  
-             Filtrer le graphique en choisissant deux variables pour lesquelles afficher la distribution.
-             Il possible d'afficher la distribution pour une seule entreprise, ou les deux.
+             Filtrer le graphique en choisissant deux variables pour lesquelles afficher la distribution.  
+             Il possible d'afficher la distribution pour une seule entreprise, ou les deux.  
+             Il est également possible de masquer les valeurs extrêmes.
              """)
 
     # Création des filtres
