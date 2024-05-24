@@ -650,12 +650,6 @@ if sidebar == pages[3]:
         st.pyplot(fig)
     except:
         st.write(":red[Oops... :sweat: veuillez choisir au moins une variable pour afficher la matrice de corrélation.]")
-    
-    # Commentaires du graphique
-    with st.expander("###### **Commentaires**"):
-        st.write("""
-        À compléter
-        """)
         
     st.write("---")
 
