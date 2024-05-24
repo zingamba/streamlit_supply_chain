@@ -514,7 +514,7 @@ if sidebar == pages[3]:
     
 
     # Création des filtres
-    with st.expander("###### **Filtres :**", expanded= True):
+    with st.expander("###### **Filtrer par :**", expanded= True):
         colonnes = st.multiselect(":green[Attributs :]", df_cleaned.columns, placeholder= "...")
         attributs = list(df_cleaned.columns) if colonnes == list() else colonnes
 
@@ -630,7 +630,7 @@ if sidebar == pages[3]:
                  "heure avis", "jour semaine avis", "semaine avis", "jour avis", "mois avis", "année avis"]  # Variables temporelles
     entreprises = ["Leboncoin", "Vinted"]
     
-    with st.expander("###### **Filtres :**", expanded= False):
+    with st.expander("###### **Filtrer par :**", expanded= False):
         sel1 = st.multiselect(":green[Sélectionnez des variables quantitatives :]", quant_vars, default= quant_vars, placeholder= "...")
         sel2 = st.multiselect(":green[Sélectionnez des variables temporelles :]", temp_vars, default= temp_vars, placeholder= "...")
         entreprises = st.multiselect(":green[Sélectionnez la ou les plateformes :]", entreprises, default= entreprises, placeholder= "...")
@@ -673,7 +673,7 @@ if sidebar == pages[3]:
                  "heure avis", "jour semaine avis", "semaine avis", "jour avis", "mois avis", "année avis"]  # Variables temporelles
     entreprises = ["Leboncoin", "Vinted"]
     
-    with st.expander("###### **Filtres :**", expanded= True):
+    with st.expander("###### **Filtrer par :**", expanded= True):
         sel1 = st.selectbox("x =", options= ["note", "jour semaine expérience", "année expérience",
                                              "jour semaine avis", "année avis"], index= 0, placeholder= "")
         sel2 = st.selectbox("y =", options= quant_vars + temp_vars, index= 3, placeholder= "")
