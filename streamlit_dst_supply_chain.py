@@ -772,7 +772,7 @@ if sidebar == pages[3]:
         range_color=(0, df_nb_avis["count"].max()),
         )
     
-    if continent == "europe" :
+    if continent == "Europe" :
         fig.update_geos(resolution= 110, 
             showland= True, landcolor= "whitesmoke",
             showcountries = True,
