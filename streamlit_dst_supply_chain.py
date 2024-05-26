@@ -32,6 +32,10 @@ df_cleaned = df_cleaned.set_index("id avis")
 file_df_world_map = "./world-administrative-boundaries/world-administrative-boundaries.shp"
 df_world_map = gpd.read_file(file_df_world_map)
 
+# Récupération de la carte
+with open('./geojson/world_map.json') as response :
+    json_countries = json.load(response)
+
 # ----------------- Titre   --------------------------------------------
 st.title("")
 title = ":orange[Leboncoin] vs :green[Vinted]"
@@ -720,10 +724,6 @@ if sidebar == pages[3]:
                         options= list(dict_continent.keys()),
                         index= 0, placeholder= "")
     entreprises = st.multiselect(":green[Entreprise =]", entreprises, default= entreprises, placeholder= "", key= 23)
-
-    # Récupération de la carte
-    with open('./geojson/world_map.json') as response :
-        json_countries = json.load(response)
 
     # ---------------------------------------------
     # ------ Nombre d'avis par pays (global) ------
