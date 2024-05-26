@@ -791,7 +791,7 @@ if sidebar == pages[3]:
         # width= 200,
         # height=2500,
         margin={"r":0,"t":0,"l":0,"b":0},
-        coloraxis=dict(colorbar=dict(orientation='h', y= -0.05),
+        coloraxis=dict(colorbar=dict(orientation='h', y= -0.05,
                                      #tickvals = [0, 10, 100, 1000, 10000, 40000],
                                      ticks= 'outside')
         )
