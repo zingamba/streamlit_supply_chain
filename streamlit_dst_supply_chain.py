@@ -3,17 +3,18 @@
 import time
 import datetime as dt
 import pandas as pd
+import geopandas as gpd
 import numpy as np
 import seaborn as sns
 import streamlit as st
 import io
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns
+import plotly.express as px
+from urllib.request import urlopen
+import json
 # ---------------------------------------------------------------
-
-# --------------------------------------------------------------------********************************************
-# CODE DE BASE POUR LE NETTOYAGE ET RÉUNIFICATION DES TABLES BRUTES LEBONCOIN ET VINTED
-# --------------------------------------------------------------------********************************************
 
 # ------------ INITIALISATION DES VARIABLES GLOBALES ------------
 file_leboncoin = "25000-reviews_leboncoin_trustpilot_scrapping.csv"
@@ -26,11 +27,10 @@ file_cleaned = "draft_avis-leboncoin-vinted-truspilot.csv"
 df_cleaned = pd.read_csv(file_cleaned, sep= ",")
 df_cleaned["date/heure avis"] = pd.to_datetime(df_cleaned["date/heure avis"])
 df_cleaned["date expérience"] = pd.to_datetime(df_cleaned["date expérience"])
+df_cleaned = df_cleaned.set_index("id avis")
 
-# --------------------------------------------------------------------********************************************
-# FIN CODE DE BASE POUR LE NETTOYAGE ET RÉUNIFICATION DES TABLES BRUTES LEBONCOIN ET VINTED
-# --------------------------------------------------------------------********************************************
-
+file_df_world_map = "./world-administrative-boundaries/world-administrative-boundaries.shp"
+df_world_map = gpd.read_file(file_df_world_map)
 
 # ----------------- Titre   --------------------------------------------
 st.title("")
@@ -490,10 +490,9 @@ if sidebar == pages[2]:
 if sidebar == pages[3]:
     st.header(pages[3])
     # --------------- Affichage de l'introduction
-    intro = """
+    st.write("""
     Les étapes précédentes ont permis d'avoir un premier dataset nettoyé, que nous pouvons utiliser pour effectuer quelques visualisations.
-    """
-    st.write(intro)
+    """)
     st.write("---")
 
     # --------------------------------------------------------------------
@@ -515,17 +514,17 @@ if sidebar == pages[3]:
 
     # Création des filtres
     with st.expander("###### **Filtrer par :**", expanded= True):
-        colonnes = st.multiselect(":green[Attributs :]", df_cleaned.columns, placeholder= "...")
+        colonnes = st.multiselect(":green[Attributs =]", df_cleaned.columns, placeholder= "...")
         attributs = list(df_cleaned.columns) if colonnes == list() else colonnes
 
         col1, col2, col3 = st.columns(3)
-        nb_avis = col1.number_input(":green[Nombre d'avis max à afficher :]", min_value= 1, max_value= len(df_cleaned), value= len(df_cleaned), help= h)
-        notes = col2.multiselect(":green[Note :]", sorted(df_cleaned["note"].unique(), reverse= True), placeholder= "...")
+        nb_avis = col1.number_input(":green[Nombre d'avis max à afficher =]", min_value= 1, max_value= len(df_cleaned), value= len(df_cleaned), help= h)
+        notes = col2.multiselect(":green[Note =]", sorted(df_cleaned["note"].unique(), reverse= True), placeholder= "...")
         notes = list(df_cleaned["note"].unique()) if notes == list() else notes
 
         min_date = df_cleaned["date/heure avis"].min()
         max_date = df_cleaned["date/heure avis"].max()
-        dates = col3.date_input(":green[Date ou période des avis :]",
+        dates = col3.date_input(":green[Date ou période des avis =]",
                         value= (min_date, max_date),
                         min_value= min_date, max_value= max_date,
                         format="YYYY-MM-DD")
@@ -575,13 +574,13 @@ if sidebar == pages[3]:
     # Création des filtres
     liste_filtres = ["Valeur de la note", "Pays du client", "Heure de publication", "Jour de publication en semaine", 
                      "Jour de publication dans le mois", "Mois de publication", "Année de publication"]
-    my_dict = {"Valeur de la note": "note", "Pays du client": "pays", "Heure de publication": "heure avis", 
+    dict_note = {"Valeur de la note": "note", "Pays du client": "pays", "Heure de publication": "heure avis", 
                "Jour de publication en semaine": "jour semaine avis", "Jour de publication dans le mois": "jour avis",
                "Mois de publication": "mois avis", "Année de publication": "année avis"}
     
     with st.container(border= True):
-        type_filtre = st.selectbox("###### **Filtrer par :**", options= liste_filtres)
-    filtre = my_dict[type_filtre]
+        type_filtre = st.selectbox("###### **Nombre d'avis en fonction de :**", options= liste_filtres)
+    filtre = dict_note[type_filtre]
 
     # Nombre d'avis en fonction de la valeur de "valeur de la note", "heure avis", "jour semaine avis", "jour avis", "mois avis", "année avis"
     if filtre in ["note", "heure avis", "jour semaine avis", "jour avis", "mois avis", "année avis"]:
@@ -594,7 +593,7 @@ if sidebar == pages[3]:
 
         # Affichage des noms de jours si filtre sur le jour
         if (filtre == "jour semaine avis") :
-            my_dict = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
+            dict_jour = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
             plt.xticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
         st.pyplot(fig)
     
@@ -632,9 +631,9 @@ if sidebar == pages[3]:
     entreprises = ["Leboncoin", "Vinted"]
     
     with st.expander("###### **Filtrer par :**", expanded= False):
-        sel1 = st.multiselect(":green[Sélectionnez des variables quantitatives :]", quant_vars, default= quant_vars, placeholder= "...")
-        sel2 = st.multiselect(":green[Sélectionnez des variables temporelles :]", temp_vars, default= temp_vars, placeholder= "...")
-        entreprises = st.multiselect(":green[Sélectionnez la ou les plateformes :]", entreprises, default= entreprises, placeholder= "...")
+        sel1 = st.multiselect(":green[Variables quantitatives =]", quant_vars, default= quant_vars, placeholder= "...")
+        sel2 = st.multiselect(":green[Variables temporelles =]", temp_vars, default= temp_vars, placeholder= "...")
+        entreprises = st.multiselect(":green[Entreprises =]", entreprises, default= entreprises, placeholder= "...")
 
     # Affichage du graphique
     df_corr = df_cleaned[df_cleaned["entreprise"] == entreprises[0]] if len(entreprises) == 1 else df_cleaned.copy()
@@ -669,11 +668,10 @@ if sidebar == pages[3]:
                  "heure avis", "jour semaine avis", "semaine avis", "jour avis", "mois avis", "année avis"]  # Variables temporelles
     entreprises = ["Leboncoin", "Vinted"]
     
-    with st.expander("###### **Filtrer par :**", expanded= True):
-        sel1 = st.selectbox("x =", options= ["note", "jour semaine expérience", "année expérience",
-                                             "jour semaine avis", "année avis"], index= 0, placeholder= "")
-        sel2 = st.selectbox("y =", options= quant_vars + temp_vars, index= 3, placeholder= "")
-        entreprises = st.multiselect(":green[Sélectionnez la ou les plateformes :]", entreprises, default= entreprises, placeholder= "")
+    sel1 = st.selectbox(":green[x =]", options= ["note", "jour semaine expérience", "année expérience",
+                                            "jour semaine avis", "année avis"], index= 0, placeholder= "")
+    sel2 = st.selectbox(":green[y =]", options= quant_vars + temp_vars, index= 3, placeholder= "")
+    entreprises = st.multiselect(":green[Entreprises =]", entreprises, default= entreprises, placeholder= "")
 
     # Affichage de la distribution des avis
     df_cleaned_pays_dist = df_cleaned[df_cleaned["entreprise"] == entreprises[0]] if len(entreprises) == 1 else df_cleaned
@@ -681,7 +679,7 @@ if sidebar == pages[3]:
         fig, ax = plt.subplots(figsize= (10, 5))
 
         # Masque des valeurs extrêmes
-        if st.checkbox("**Masquer les valeurs extrêmes**") :
+        if not st.checkbox("**Afficher les valeurs extrêmes**") :
             sns.boxplot(x= df_cleaned_pays_dist[sel1], y= df_cleaned_pays_dist[sel2], showfliers = False,
                         hue= df_cleaned_pays_dist["entreprise"], palette= [color_l, color_v])
         else:
@@ -694,10 +692,10 @@ if sidebar == pages[3]:
 
         # Affichage des noms de jours si filtre sur le jour
         if (sel1 == "jour semaine avis") or (sel1 == "jour semaine expérience"):
-            my_dict = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
+            dict_jour = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
             plt.xticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
         if (sel2 == "jour semaine avis") or (sel2 == "jour semaine expérience"):
-            my_dict = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
+            dict_jour = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
             plt.yticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
 
         st.pyplot(fig)
@@ -706,17 +704,108 @@ if sidebar == pages[3]:
     # --------------------------------------------------------------------
     # ********************* Répartition géographique *********************
     # --------------------------------------------------------------------
-    # --------------- Affichage du graphique 2
     st.subheader("5. Répartition géographique")
-    st.write("""
-             Le graphique suivant affiche plusieurs types de distributions du nombre de notes en fonction de la valeur de la note,
-             du pays, de l'entreprise, de l'heure, du jour de semaine, du jour du mois, du mois ou encore de l'année.
-             """)
-    st.write("Description")
+    h = """
+    (Déplacez la souris sur la carte pour voir le nombre d'avis pour un pays.  
+    Zoom+ pour les détails sur une région.)"""
+    
+    st.write(f"La carte suivante affiche la répartion de certaines données en fonction des pays.")
 
-    df = pd.DataFrame(np.random.randn(1000, 2) / [50, 50] + [37.76, -122.4], columns=['lat', 'lon'])
-    st.dataframe(df)
-    st.map(df)
+    # Dictionnaire de correspondance
+    dict_continent = {"Monde": "world", "Afrique": "africa", "Amérique du Nord": "north america", 
+                   "Amérique du Sud": "south america","Europe": "europe", "Asie": "asia"}
+    
+    # Création des filtres
+    continent = st.selectbox(":green[Continent =]",
+                        options= list(dict_continent.keys()),
+                        index= 0, placeholder= "")
+    entreprises = st.multiselect(":green[Entreprise =]", entreprises, default= entreprises, placeholder= "", key= 23)
+
+    # Récupération de la carte
+    with open('./geojson/world_map.json') as response :
+        json_countries = json.load(response)
+
+    # ---------------------------------------------
+    # ------ Nombre d'avis par pays (global) ------
+    # ---------------------------------------------
+    if len(entreprises) == 1:
+        # Préparation des données à dessiner l'entreprise
+        df_nb_avis = df_cleaned.loc[df_cleaned["entreprise"] == entreprises[0], "pays"].value_counts().reset_index()
+    else:
+        # Préparation des données à dessiner pour les deux entreprise
+        df_nb_avis = df_cleaned["pays"].value_counts().reset_index()
+
+    df_nb_avis = df_nb_avis.merge(df_world_map, how= "inner", left_on= "pays", right_on= "iso_3166_1_")
+    df_nb_avis = df_nb_avis[["pays", "count", "french_shor", "continent", "region"]].rename(columns= {"french_shor": "name_fr"})
+    df_nb_avis["continent"] = df_nb_avis["continent"].apply(lambda x: x.lower())
+    df_nb_avis["region"] = df_nb_avis["region"].apply(lambda x: x.lower())
+
+    for i in range(0, len(df_nb_avis)):
+        df_nb_avis.iloc[i, 3] = df_nb_avis.iloc[i, 4].lower() if df_nb_avis.iloc[i, 3] == "americas" else df_nb_avis.iloc[i, 3].lower()
+        df_nb_avis.iloc[i, 3] = "north america" if df_nb_avis.iloc[i, 4] == "northern america" else df_nb_avis.iloc[i, 3]
+        df_nb_avis.iloc[i, 3] = "north america" if df_nb_avis.iloc[i, 4] == "central america" else df_nb_avis.iloc[i, 3]
+        df_nb_avis.iloc[i, 3] = "south america" if df_nb_avis.iloc[i, 4] == "caribbean" else df_nb_avis.iloc[i, 3]
+        df_nb_avis.iloc[i, 3] = "asia" if df_nb_avis.iloc[i, 3] == "oceania" else df_nb_avis.iloc[i, 3]
+
+    # Filtre du dataset sur la sélection utilisateur
+    st.text(f'{h}')
+    df_nb_avis = df_nb_avis[df_nb_avis["continent"] == dict_continent[continent]] if dict_continent[continent] != "world" else df_nb_avis
+    # df_nb_avis["count"] = np.log10(df_nb_avis["count"])
+
+    # Tracé de la carte et tableau des résultats
+    fig = px.choropleth(df_nb_avis, geojson= json_countries,
+        locations= "pays",
+        color= 'count',
+        featureidkey= "properties.iso_a2_eh",
+        color_continuous_scale= [
+        [0, 'powderblue'],                  #0
+        [1./10000, 'powderblue'],           #10
+        [1./1000, 'lightskyblue'],          #100
+        [1./100, 'cornflowerblue'],         #1000
+        [1./10, 'indianred'],                   #10000
+        [1., 'darkred']],                   #100000
+        scope= dict_continent[continent],
+        labels= {"count":"Nombre d'avis"},
+        hover_name= df_nb_avis["name_fr"],
+        range_color=(0, df_nb_avis["count"].max()),
+        )
+    
+    if continent != "europe" :
+        fig.update_geos(resolution= 110, 
+            showland= True, landcolor= "whitesmoke",
+            showcountries = True,
+                    )
+    else:
+        fig.update_geos(resolution= 110, 
+            fitbounds= "locations", visible= True,
+            showland= True, landcolor= "whitesmoke",
+            showcountries = True,
+                    )
+    
+    fig.update_layout(
+        paper_bgcolor="white",
+        # title= "Nombre d'avis par pays",
+        # autosize= True,
+        # width= 200,
+        # height=2500,
+        margin={"r":0,"t":0,"l":0,"b":0},
+        coloraxis=dict(colorbar=dict(orientation='h', y= -0.05))
+                                     #tickvals = [0, 10, 100, 1000, 10000, 40000],
+                                     #ticks='outside'))
+        )
+    
+    # fig.update_yaxes(automargin= "left+top")
+
+    # Affichage d'un tableau top5
+    texte = f'{entreprises[0]}' if len(entreprises) == 1 else f'Leboncoin\nVinted'
+    col1, col2 = st.columns([0.20, 0.80])
+    col1.write(f"***Top 10 {continent} :***")
+    col1.text(texte)
+    t = df_nb_avis.head(10)[["name_fr", "count"]].rename(columns= {"name_fr": "Pays", "count": "Total"})
+    col1.dataframe(t, hide_index= True, column_config= {"Pays": st.column_config.Column(width= "small", required=True)})
+
+    # Affichage de la carte
+    col2.plotly_chart(fig, use_container_width= True)
 
     st.write("---")
 
