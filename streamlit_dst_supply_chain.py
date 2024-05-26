@@ -764,7 +764,7 @@ if sidebar == pages[3]:
         [1./10000, 'powderblue'],           #10
         [1./1000, 'lightskyblue'],          #100
         [1./100, 'cornflowerblue'],         #1000
-        [1./10, 'charteuse'],                   #10000
+        [1./10, 'chartreuse'],                   #10000
         [1., 'darkred']],                   #100000
         scope= dict_continent[continent],
         labels= {"count":"Nombre d'avis"},
