@@ -741,6 +741,7 @@ if sidebar == pages[3]:
     df_nb_avis["continent"] = df_nb_avis["continent"].apply(lambda x: x.lower())
     df_nb_avis["region"] = df_nb_avis["region"].apply(lambda x: x.lower())
 
+    # Classement de certains pays dans les bons continents
     for i in range(0, len(df_nb_avis)):
         df_nb_avis.iloc[i, 3] = df_nb_avis.iloc[i, 4].lower() if df_nb_avis.iloc[i, 3] == "americas" else df_nb_avis.iloc[i, 3].lower()
         df_nb_avis.iloc[i, 3] = "north america" if df_nb_avis.iloc[i, 4] == "northern america" else df_nb_avis.iloc[i, 3]
@@ -771,7 +772,7 @@ if sidebar == pages[3]:
         range_color=(0, df_nb_avis["count"].max()),
         )
     
-    if continent != "europe" :
+    if continent == "europe" :
         fig.update_geos(resolution= 110, 
             showland= True, landcolor= "whitesmoke",
             showcountries = True,
