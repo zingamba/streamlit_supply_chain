@@ -27,7 +27,7 @@ file_cleaned = "draft_avis-leboncoin-vinted-truspilot.csv"
 df_cleaned = pd.read_csv(file_cleaned, sep= ",")
 df_cleaned["date/heure avis"] = pd.to_datetime(df_cleaned["date/heure avis"])
 df_cleaned["date expérience"] = pd.to_datetime(df_cleaned["date expérience"])
-df_cleaned = df_cleaned.set_index("id avis")
+df_cleaned = df_cleaned.set_index("id avis") 
 
 file_df_world_map = "./world-administrative-boundaries/world-administrative-boundaries.shp"
 df_world_map = gpd.read_file(file_df_world_map)
