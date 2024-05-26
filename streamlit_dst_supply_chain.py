@@ -711,7 +711,7 @@ if sidebar == pages[3]:
     st.subheader("5. Répartition géographique")
     h = """
     (Déplacez la souris sur la carte pour voir le nombre d'avis pour un pays.  
-    Zoom+ pour les détails sur une région.)"""
+    Zoom+ pour les détails sur une région. Agrandir pour afficher la carte en plein écran.)"""
     
     st.write(f"La carte suivante affiche la répartion de certaines données en fonction des pays.")
 
