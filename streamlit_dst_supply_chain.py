@@ -806,7 +806,7 @@ if sidebar == pages[3]:
                         # showocean = True, oceancolor= "dodgerblue",
                         visible= False,
                         showland= True, landcolor= "ghostwhite",
-                        showcountries = True,
+                        showcountries = True, 
                         )
     
     fig.update_layout(
