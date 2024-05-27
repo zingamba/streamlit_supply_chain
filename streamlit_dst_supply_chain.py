@@ -737,7 +737,7 @@ if sidebar == pages[3]:
 
     # Dictionnaire de correspondance
     dict_continent = {"Monde": "world", "Afrique": "africa", "Amérique du Nord": "north america", 
-                   "Amérique du Sud": "south america","Europe": "europe", "Asie": "asia"}
+                   "Amérique du Sud": "south america", "Asie": "asia", "Europe": "europe"}
     
     # Création des filtres
     continent = st.selectbox(":green[Continent =]",
@@ -804,11 +804,11 @@ if sidebar == pages[3]:
         featureidkey= "properties.iso_a2_eh",
         color= df_metrique.columns[1],
         color_continuous_scale= [
-        [0, 'antiquewhite'],                #0
-        [1./10000, 'moccasin'],             #10
-        [1./1000, 'orange'],                #100
-        [1./100, 'cornflowerblue'],         #1000
-        [1./10, 'royalblue'],               #10000
+        [0, 'aliceblue'],                         #0
+        [1./10000, 'lightsteelblue'],             #10
+        [1./1000, 'cornflowerblue'],              #100
+        [1./100, 'royalblue'],                    #1000
+        [1./10, 'limegreen'],                     #10000
         [1., 'green']] if metrique == "Nombre d'avis" else "Oranges",                     #100000
         scope= dict_continent[continent],
         labels= {"count": "Nombre d'avis", "moy": "Note moyenne"},
