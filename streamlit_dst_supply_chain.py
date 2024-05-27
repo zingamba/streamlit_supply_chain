@@ -100,7 +100,7 @@ if sidebar == pages[1]:
     Mais aussi le commentaire laissé par le client afin d'en extraire le propos global : article défectueux ou conforme? 
     livraison correcte ou problématique? sentiment? ...\n
     Ne disposant pas d'une base consolidées avec ces informations, il est apparu nécessaire d'aller collecter ces données directement depuis
-    la plateforme d'avis clients Trustpilot.
+    une plateforme d'avis clients. Nous avons fait le choix de Trustpilot.
     """
 
     webscrapping = """
