@@ -614,10 +614,16 @@ if sidebar == pages[3]:
         plt.ylabel("Nombre d'avis")
         plt.legend(title= "Entreprise")
 
+        # Affichage des totaux sur les barres
+        for container in ax.containers:
+            if filtre not in ["jour avis", "mois avis", "heure avis"]:
+                ax.bar_label(container)
+
         # Affichage des noms de jours si filtre sur le jour
         if (filtre == "jour semaine avis") :
             dict_jour = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
             plt.xticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
+
         st.pyplot(fig)
     
     # Nombre d'avis en fonction du "pays du client"
@@ -625,12 +631,17 @@ if sidebar == pages[3]:
         # Affichage du graphique de Leboncoin
         df_cleaned_pays = df_cleaned.copy()
         df_cleaned_pays["pays"] = df_cleaned_pays["pays"].apply(lambda x: "Autres pays" if x not in ["FR"] else x)
-        fig1, ax = plt.subplots(figsize= (10, 5))
-        sns.countplot(x= df_cleaned_pays["pays"], hue= df_cleaned_pays["entreprise"], legend= "full", palette= [color_l, color_v], ax= ax)
+        fig1, ax1 = plt.subplots(figsize= (10, 5))
+        sns.countplot(x= df_cleaned_pays["pays"], hue= df_cleaned_pays["entreprise"], legend= "full", palette= [color_l, color_v], ax= ax1)
         plt.title(f"Nombre d'avis par : {type_filtre}")
         plt.xlabel(type_filtre.capitalize())        
         plt.ylabel("Nombre d'avis")
         #plt.legend(title= "Entreprise")
+
+        # Affichage des totaux sur les barres
+        for container in ax1.containers:
+            ax1.bar_label(container)
+            
         st.pyplot(fig1)
 
     st.write("---")
