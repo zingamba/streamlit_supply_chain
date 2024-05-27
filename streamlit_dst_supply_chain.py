@@ -539,27 +539,46 @@ if sidebar == pages[3]:
         date_debut = dt.datetime.combine(min_date, dt.datetime.min.time())
         date_fin = dt.datetime.combine(max_date, dt.datetime.max.time())
 
-    # Affichage de la table
+    # Création de la table
     df_shown = df_cleaned.copy()
     df_shown = df_shown[(df_shown["date/heure avis"].between(date_debut, date_fin, inclusive= "both"))]
     df_shown = df_shown[(df_shown["note"].isin(notes))]
     df_shown = df_shown[attributs]
     df_shown = df_shown.head(nb_avis)
 
+    # Impression des résultats
+    kol1, kol2 = st.columns([2/3, 1/3])
+    texte1 = f"**{len(df_shown)}** avis récupérés à partir des plus récents."
+    if str(date_fin).split(' ')[0] != str(date_debut).split(' ')[0]:
+        texte2 = f"Publiés entre le **{str(date_fin).split(' ')[0]}** et le **{str(date_debut).split(' ')[0]}**."
+    else:
+        texte2 = f"Publiés le **{str(date_fin).split(' ')[0]}**."
+    texte3 = f"Avec une note de **{str(sorted(notes, reverse= True)).replace('[', '').replace(']', '').replace(',', ' ou')}** étoiles.  "
+    kol1.write(f"{texte1}  \n{texte2}  \n{texte3}")
+
+    # Bouton de téléchargement
+    @st.cache_data # IMPORTANT: mise en cache de la conversion pour éviter l'exécution à chaque rerun
+    def convert_df(df):
+        return df.to_csv().encode("utf-8")
+
+    csv = convert_df(df_shown)
+
+    kol2.download_button(
+        label= "Télécharger le résultat (.csv)",
+        type= "primary",
+        data= csv,
+        file_name= f"{len(df_shown)}_avis_dataset.csv",
+        mime= "text/csv",
+        use_container_width= True
+    )
+    
+    # Affichage de la table
     st.dataframe(df_shown, column_config= 
                  {"_index": st.column_config.NumberColumn(format= "%d"),
                   "année expérience": st.column_config.NumberColumn(format= "%d"),
                   "année avis": st.column_config.NumberColumn(format= "%d"),
                   "date expérience": st.column_config.DateColumn()})
-
-    # Impression des résultats
-    st.write(f"**{len(df_shown)}** avis récupérés à partir des plus récents")
-    if str(date_fin).split(' ')[0] != str(date_debut).split(' ')[0]:
-        st.write(f"Publiés entre le **{str(date_fin).split(' ')[0]}** et le **{str(date_debut).split(' ')[0]}**.")
-    else:
-        st.write(f"Publiés le **{str(date_fin).split(' ')[0]}**.")
-    st.write(f"Avec une note de **{str(sorted(notes, reverse= True)).replace('[', '').replace(']', '').replace(',', ' ou')}** étoiles")
-
+    
     st.write("---")
 
     # --------------------------------------------------------------------
@@ -752,58 +771,64 @@ if sidebar == pages[3]:
     # Filtre du dataset sur la sélection utilisateur
     st.text(f'{h}')
     df_nb_avis = df_nb_avis[df_nb_avis["continent"] == dict_continent[continent]] if dict_continent[continent] != "world" else df_nb_avis
-    # df_nb_avis["count"] = np.log10(df_nb_avis["count"])
+
 
     # Tracé de la carte et tableau des résultats
-    fig = px.choropleth(df_nb_avis, geojson= json_countries,
+    fig = px.choropleth(df_nb_avis, geojson= json_countries, # width= 500,
+        projection= "robinson",
         locations= "pays",
-        color= 'count',
         featureidkey= "properties.iso_a2_eh",
+        color= 'count',
         color_continuous_scale= [
-        [0, 'powderblue'],                  #0
-        [1./10000, 'powderblue'],           #10
-        [1./1000, 'lightskyblue'],          #100
+        [0, 'antiquewhite'],                #0
+        [1./10000, 'moccasin'],             #10
+        [1./1000, 'orange'],                #100
         [1./100, 'cornflowerblue'],         #1000
-        [1./10, 'chartreuse'],                   #10000
-        [1., 'darkred']],                   #100000
+        [1./10, 'royalblue'],               #10000
+        [1., 'green']],                     #100000
         scope= dict_continent[continent],
-        labels= {"count":"Nombre d'avis"},
+        labels= {"count": "Nombre d'avis"},
         hover_name= df_nb_avis["name_fr"],
         range_color=(0, df_nb_avis["count"].max()),
         )
     
     if continent == "Europe" :
-        fig.update_geos(resolution= 110, 
-            showland= True, landcolor= "whitesmoke",
-            showcountries = True,
-                    )
+        fig.update_geos(resolution= 110,
+                        # fitbounds= "locations",
+                        # showocean = True, oceancolor= "dodgerblue",
+                        visible= False,
+                        showland= True, landcolor= "ghostwhite",
+                        showcountries = True,
+                        )
     else:
-        fig.update_geos(resolution= 110, 
-            fitbounds= "locations", visible= True,
-            showland= True, landcolor= "whitesmoke",
-            showcountries = True,
-                    )
+        fig.update_geos(resolution= 110,
+                        # fitbounds= "locations",
+                        # showocean = True, oceancolor= "dodgerblue",
+                        visible= False,
+                        showland= True, landcolor= "ghostwhite",
+                        showcountries = True,
+                        )
     
     fig.update_layout(
-        paper_bgcolor="white",
+        # paper_bgcolor= "LightSteelBlue",
         # title= "Nombre d'avis par pays",
         # autosize= True,
-        # width= 200,
-        # height=2500,
-        margin={"r":0,"t":0,"l":0,"b":0},
-        coloraxis=dict(colorbar=dict(orientation='h', 
-                                     y= -0.05, 
-                                     ticks= 'outside')))
+        margin= {"r": 0, "t": 0, "l": 0, "b": 0},
+        coloraxis= dict(colorbar= dict(orientation='h',
+                                     y= -0.1, 
+                                     ticks= 'outside'
+                                     )))
     
-    # fig.update_yaxes(automargin= "left+top")
-
     # Affichage d'un tableau top5
-    texte = f'{entreprises[0]}' if len(entreprises) == 1 else f'Leboncoin\nVinted'
+    texte = f'{entreprises[0]}' if len(entreprises) == 1 else f'Leboncoin\n + Vinted'
     col1, col2 = st.columns([0.20, 0.80])
-    col1.write(f"***Top 10 {continent} :***")
+
+    col1.write("---")
+    col1.write(f"***Top 5 {continent} :***")
     col1.text(texte)
-    t = df_nb_avis.head(10)[["name_fr", "count"]].rename(columns= {"name_fr": "Pays", "count": "Total"})
-    col1.dataframe(t, hide_index= True, column_config= {"Pays": st.column_config.Column(width= "small", required=True)})
+    t = df_nb_avis.head(5)[["name_fr", "count"]].rename(columns= {"name_fr": "Pays", "count": "Total"})
+    col1.dataframe(t, use_container_width= True, hide_index= True, 
+                   column_config= {"Pays": st.column_config.Column(width= "small", required=True)})
 
     # Affichage de la carte
     col2.plotly_chart(fig, use_container_width= True)
