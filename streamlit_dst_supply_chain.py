@@ -743,53 +743,77 @@ if sidebar == pages[3]:
     continent = st.selectbox(":green[Continent =]",
                         options= list(dict_continent.keys()),
                         index= 0, placeholder= "")
-    entreprises = st.multiselect(":green[Entreprise =]", entreprises, default= entreprises, placeholder= "", key= 23)
+    
+    kol1, kol2 = st.columns(2)
+    entreprises = kol1.multiselect(":green[Entreprise =]", entreprises, default= entreprises, key= 23)
+    entreprise = ["Leboncoin", "Vinted"] if len(entreprises) == 0 else entreprises
+
+    metrique = kol2.selectbox(":green[Métrique à afficher =]", options= ["Nombre d'avis", "Moyenne"], index= 0)
+    metrique = "Nombre d'avis" if len(metrique) == 0 else metrique
+    my_func = {"note": "mean"}
 
     # ---------------------------------------------
-    # ------ Nombre d'avis par pays (global) ------
+    # ------ Nombre et moyenne d'avis par pays (global) ------
     # ---------------------------------------------
+    # if len(entreprises) == 1:
+    #     # Préparation des données à dessiner l'entreprise
+    #     df_nb_avis = df_cleaned.loc[df_cleaned["entreprise"] == entreprises[0], "pays"].value_counts().reset_index()
+    # else:
+    #     # Préparation des données à dessiner pour les deux entreprise
+    #     df_nb_avis = df_cleaned["pays"].value_counts().reset_index()
+
     if len(entreprises) == 1:
         # Préparation des données à dessiner l'entreprise
-        df_nb_avis = df_cleaned.loc[df_cleaned["entreprise"] == entreprises[0], "pays"].value_counts().reset_index()
+        df_metrique = df_cleaned.loc[df_cleaned["entreprise"] == entreprises[0]]
+        if metrique == "Moyenne":
+            df_metrique = df_metrique.groupby("pays").agg(my_func).reset_index().rename(columns= {"note": "moy"})
+            df_metrique = round(df_metrique, 2)
+        else:
+            df_metrique = df_metrique["pays"].value_counts().reset_index()
     else:
         # Préparation des données à dessiner pour les deux entreprise
-        df_nb_avis = df_cleaned["pays"].value_counts().reset_index()
+        if metrique == "Moyenne":
+            df_metrique = df_cleaned.groupby("pays").agg(my_func).reset_index().rename(columns= {"note": "moy"})
+            df_metrique = round(df_metrique, 2)
+        else:
+            df_metrique = df_cleaned["pays"].value_counts().reset_index()
 
-    df_nb_avis = df_nb_avis.merge(df_world_map, how= "inner", left_on= "pays", right_on= "iso_3166_1_")
-    df_nb_avis = df_nb_avis[["pays", "count", "french_shor", "continent", "region"]].rename(columns= {"french_shor": "name_fr"})
-    df_nb_avis["continent"] = df_nb_avis["continent"].apply(lambda x: x.lower())
-    df_nb_avis["region"] = df_nb_avis["region"].apply(lambda x: x.lower())
+
+    df_metrique = df_metrique.merge(df_world_map, how= "inner", left_on= "pays", right_on= "iso_3166_1_")
+    df_metrique = df_metrique[["pays", df_metrique.columns[1], "french_shor", "continent", "region"]].rename(columns= {"french_shor": "name_fr"})
+    df_metrique["continent"] = df_metrique["continent"].apply(lambda x: x.lower())
+    df_metrique["region"] = df_metrique["region"].apply(lambda x: x.lower())
 
     # Classement de certains pays dans les bons continents
-    for i in range(0, len(df_nb_avis)):
-        df_nb_avis.iloc[i, 3] = df_nb_avis.iloc[i, 4].lower() if df_nb_avis.iloc[i, 3] == "americas" else df_nb_avis.iloc[i, 3].lower()
-        df_nb_avis.iloc[i, 3] = "north america" if df_nb_avis.iloc[i, 4] == "northern america" else df_nb_avis.iloc[i, 3]
-        df_nb_avis.iloc[i, 3] = "north america" if df_nb_avis.iloc[i, 4] == "central america" else df_nb_avis.iloc[i, 3]
-        df_nb_avis.iloc[i, 3] = "south america" if df_nb_avis.iloc[i, 4] == "caribbean" else df_nb_avis.iloc[i, 3]
-        df_nb_avis.iloc[i, 3] = "asia" if df_nb_avis.iloc[i, 3] == "oceania" else df_nb_avis.iloc[i, 3]
+    for i in range(0, len(df_metrique)):
+        df_metrique.iloc[i, 3] = df_metrique.iloc[i, 4].lower() if df_metrique.iloc[i, 3] == "americas" else df_metrique.iloc[i, 3].lower()
+        df_metrique.iloc[i, 3] = "north america" if df_metrique.iloc[i, 4] == "northern america" else df_metrique.iloc[i, 3]
+        df_metrique.iloc[i, 3] = "north america" if df_metrique.iloc[i, 4] == "central america" else df_metrique.iloc[i, 3]
+        df_metrique.iloc[i, 3] = "south america" if df_metrique.iloc[i, 4] == "caribbean" else df_metrique.iloc[i, 3]
+        df_metrique.iloc[i, 3] = "asia" if df_metrique.iloc[i, 3] == "oceania" else df_metrique.iloc[i, 3]
 
     # Filtre du dataset sur la sélection utilisateur
     st.text(f'{h}')
-    df_nb_avis = df_nb_avis[df_nb_avis["continent"] == dict_continent[continent]] if dict_continent[continent] != "world" else df_nb_avis
+    df_metrique = df_metrique[df_metrique["continent"] == dict_continent[continent]] if dict_continent[continent] != "world" else df_metrique
 
 
     # Tracé de la carte et tableau des résultats
-    fig = px.choropleth(df_nb_avis, geojson= json_countries, # width= 500,
+    fig = px.choropleth(df_metrique, geojson= json_countries, # width= 500,
         projection= "robinson",
         locations= "pays",
         featureidkey= "properties.iso_a2_eh",
-        color= 'count',
+        color= df_metrique.columns[1],
         color_continuous_scale= [
         [0, 'antiquewhite'],                #0
         [1./10000, 'moccasin'],             #10
         [1./1000, 'orange'],                #100
         [1./100, 'cornflowerblue'],         #1000
         [1./10, 'royalblue'],               #10000
-        [1., 'green']],                     #100000
+        [1., 'green']] if metrique == "Nombre d'avis" else "Oranges",                     #100000
         scope= dict_continent[continent],
-        labels= {"count": "Nombre d'avis"},
-        hover_name= df_nb_avis["name_fr"],
-        range_color=(0, df_nb_avis["count"].max()),
+        labels= {"count": "Nombre d'avis", "moy": "Note moyenne"},
+        hover_name= df_metrique["name_fr"],
+        range_color=(0, df_metrique[df_metrique.columns[1]].max()),
         )
     
     if continent == "Europe" :
@@ -819,15 +843,17 @@ if sidebar == pages[3]:
                                      ticks= 'outside'
                                      )))
     
-    # Affichage d'un tableau top5
+    # Affichage d'un tableau top10
     texte = f'{entreprises[0]}' if len(entreprises) == 1 else f'Leboncoin\n + Vinted'
     col1, col2 = st.columns([0.20, 0.80])
 
     col1.write("---")
     col1.write(f"***Top 5 {continent} :***")
     col1.text(texte)
-    t = df_nb_avis.head(5)[["name_fr", "count"]].rename(columns= {"name_fr": "Pays", "count": "Total"})
-    col1.dataframe(t, use_container_width= True, hide_index= True, 
+    my_dict = {"count": "Total", "moy": "Moy."}
+    t = df_metrique.head(5)[["name_fr", df_metrique.columns[1]]].rename(columns= {"name_fr": "Pays", 
+                                                                                  df_metrique.columns[1]: my_dict[df_metrique.columns[1]]})
+    col1.dataframe(t.sort_values(my_dict[df_metrique.columns[1]], ascending= False), use_container_width= True, hide_index= True, 
                    column_config= {"Pays": st.column_config.Column(width= "small", required=True)})
 
     # Affichage de la carte
