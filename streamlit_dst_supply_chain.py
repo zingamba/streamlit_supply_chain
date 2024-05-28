@@ -100,7 +100,8 @@ if sidebar == pages[1]:
     Mais aussi le commentaire laissé par le client afin d'en extraire le propos global : article défectueux ou conforme? 
     livraison correcte ou problématique? sentiment? ...\n
     Ne disposant pas d'une base consolidées avec ces informations, il est apparu nécessaire d'aller collecter ces données directement depuis
-    une plateforme d'avis clients. Nous avons fait le choix de Trustpilot.
+    une plateforme d'avis clients.  
+    Nous avons fait le choix de **Trustpilot**.
     """
 
     webscrapping = """
@@ -675,7 +676,7 @@ if sidebar == pages[3]:
     df_corr = df_corr.corr()
     try:
         fig, ax = plt.subplots(figsize= (11, 5))
-        if st.checkbox("**Montrer les variables en corrélation forte**"):
+        if st.checkbox("**Montrer les variables en corrélation forte (|corr| > 0.5)**"):
             df_corr = df_corr[(df_corr <= -0.5) | (df_corr >= 0.5)]
             sns.heatmap(df_corr, cmap = "seismic", ax= ax, annot= True, fmt=".2f", vmin= -1, vmax= 1, linewidths= 0.1, linecolor= "lightgrey")
         else:
@@ -766,13 +767,6 @@ if sidebar == pages[3]:
     # ---------------------------------------------
     # ------ Nombre et moyenne d'avis par pays (global) ------
     # ---------------------------------------------
-    # if len(entreprises) == 1:
-    #     # Préparation des données à dessiner l'entreprise
-    #     df_nb_avis = df_cleaned.loc[df_cleaned["entreprise"] == entreprises[0], "pays"].value_counts().reset_index()
-    # else:
-    #     # Préparation des données à dessiner pour les deux entreprise
-    #     df_nb_avis = df_cleaned["pays"].value_counts().reset_index()
-
     if len(entreprises) == 1:
         # Préparation des données à dessiner l'entreprise
         df_metrique = df_cleaned.loc[df_cleaned["entreprise"] == entreprises[0]]
@@ -849,10 +843,14 @@ if sidebar == pages[3]:
         # title= "Nombre d'avis par pays",
         # autosize= True,
         margin= {"r": 0, "t": 0, "l": 0, "b": 0},
-        coloraxis= dict(colorbar= dict(orientation='h',
-                                     y= -0.1, 
-                                     ticks= 'outside'
-                                     )))
+        )
+    
+    fig.update_coloraxes(
+        colorbar_len= 1,
+        colorbar= dict(orientation='h',
+                                     y= -0.1,
+                                     ticks= 'outside',
+                                     ))
     
     # Affichage d'un tableau top10
     texte = f'{entreprises[0]}' if len(entreprises) == 1 else f'Leboncoin\n + Vinted'
