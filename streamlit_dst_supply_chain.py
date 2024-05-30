@@ -81,7 +81,7 @@ if sidebar == pages[1]:
 
     source = """ 
     Les données ont été collectées à partir des derniers avis clients déposés sur Truspilot, et concernant
-    [tous les déclinaisons locales de Vinted à travers le monde](https://fr.trustpilot.com/search?query=vinted)
+    [toutes les déclinaisons locales de Vinted à travers le monde](https://fr.trustpilot.com/search?query=vinted)
 
     En effet, pour prédire la note d'un client, il est nécessaire d'identifier les entités importantes d’un avis : la note, la localisation, 
     le nom de l'entreprise, la date, ....  
