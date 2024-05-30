@@ -17,32 +17,23 @@ import json
 # ---------------------------------------------------------------
 
 # ------------ INITIALISATION DES VARIABLES GLOBALES ------------
-file_leboncoin = "25000-reviews_leboncoin_trustpilot_scrapping.csv"
-df_leboncoin = pd.read_csv(file_leboncoin, sep= ",")
+file = "cleaned_reviews-vinted-truspilot.csv"
+df_cleaned = pd.read_csv(file, sep= ",", index_col= "id_avis", low_memory= False)
+df_cleaned["date_heure_avis"] = pd.to_datetime(df_cleaned["date_heure_avis"])
+df_cleaned["date_experience"] = pd.to_datetime(df_cleaned["date_experience"])
 
-file_vinted = "25009-reviews_vinted_trustpilot_scrapping.csv"
-df_vinted = pd.read_csv(file_vinted, sep= ",")
-
-file_cleaned = "draft_avis-leboncoin-vinted-truspilot.csv"
-df_cleaned = pd.read_csv(file_cleaned, sep= ",")
-df_cleaned["date/heure avis"] = pd.to_datetime(df_cleaned["date/heure avis"])
-df_cleaned["date expérience"] = pd.to_datetime(df_cleaned["date expérience"])
-df_cleaned = df_cleaned.set_index("id avis") 
-
-file_df_world_map = "./world-administrative-boundaries/world-administrative-boundaries.shp"
+file_df_world_map = "./data/world-administrative-boundaries/world-administrative-boundaries.shp"
 df_world_map = gpd.read_file(file_df_world_map)
 
 # Récupération de la carte
-with open('./geojson/world_map.json') as response :
+with open('./data/world_map.json') as response :
     json_countries = json.load(response)
 
 # ----------------- Titre   --------------------------------------------
 st.title("")
 title = ":orange[Leboncoin] vs :green[Vinted]"
-col1, col2, col3 = st.columns([1, 0.1, 1.9])
-col2.subheader("*/*")
-col1.image("./images/leboncoin-logo.svg", width= 220)
-col3.image("./images/vinted-logo.svg", width= 130)
+col1, col2, col3 = st.columns([1, 2, 1])
+col2.image("./assets/vinted-logo.svg", width= 250)
 
 
 # ----------------  Sidebar   ------------------------------------------
@@ -54,7 +45,7 @@ auteurs = """
         Auteur3  
         Auteur4
         """
-st.sidebar.title("Leboncoin vs Vinted")
+st.sidebar.title("Vinted")
 sidebar = st.sidebar.radio("Sélectionnez une partie :", pages)
 st.sidebar.write("---")
 st.sidebar.subheader("Auteurs")             
@@ -66,11 +57,9 @@ if sidebar == pages[0]:
     presentation = """
     Ce projet a été réalisés dans le cadre de notre formation en data science délivrée par 
     [Datascientest](https://datascientest.com/formation-data-scientist). 
-    Nous nous sommes intéressés à Leboncoin et à Vinted : deux entreprises majeures, concurrentes et spécialisées dans la 
+    Nous nous sommes intéressés à Vinted, entreprise spécialisée dans la 
     publication de petites annonces en ligne pour la vente de biens de particulier à particulier.\n
-    En 2024, Leboncoin.fr (entreprise française) est le 2e site e-commerce le plus consulté en France avec un traffic moyen de 
-    28 millions de visiteurs uniques par mois.\n
-    Tandis que Vinted.fr (entreprise lithuanienne), avec 16 millions de visiteurs uniques mensuel, est le 4ème site e-commerce
+    Vinted.fr (entreprise lithuanienne), avec 16 millions de visiteurs uniques mensuel, est le 4ème site e-commerce
     le plus consulté en France.\n
     """
 
@@ -91,9 +80,8 @@ if sidebar == pages[1]:
     st.header(pages[1])
 
     source = """ 
-    Les données ont été collectées à partir :
-    - [Des derniers avis clients déposés sur Truspilot pour Leboncoin](https://fr.trustpilot.com/review/www.leboncoin.fr?languages=all&sort=recency)
-    - [Des derniers avis clients déposés sur Truspilot pour Vinted](https://fr.trustpilot.com/review/vinted.fr?languages=all&sort=recency)
+    Les données ont été collectées à partir des derniers avis clients déposés sur Truspilot, et concernant
+    [tous les déclinaisons locales de Vinted à travers le monde]](https://fr.trustpilot.com/search?query=vinted)
 
     En effet, pour prédire la note d'un client, il est nécessaire d'identifier les entités importantes d’un avis : la note, la localisation, 
     le nom de l'entreprise, la date, ....  
@@ -107,12 +95,9 @@ if sidebar == pages[1]:
     webscrapping = """
     Grâce à la bibliothèque :orange[***BeautifulSoup***] de python, un programme a été rédigé afin de collecter les données 
     en "webscrappant" le site Trustpilot.
-    - Afin d'avoir un jeu de données  consistant, mais aussi pour avoir des avis étalés sur plusieurs mois, le code mis en place 
+    Afin d'avoir un jeu de données  consistant, mais aussi pour avoir des avis étalés sur plusieurs mois, le code mis en place 
     a permis de récupérer la totalité des avis publiés pour Vinted.  
-    25.009 avis à la date d'exécution du code.
-    - Afin d'avoir un jeu données équilibré pour les deux entreprises, à la même date, les 25.000 derniers avis publiés pour Leboncoin 
-    ont également été récoltés.\n
-    Un jeu de données brut totalisant 50.009 entrées a ainsi été constitué.\n
+    C'est-à-dire un peu plus de 100k avis à la date d'exécution du code. Ce qui constitue notre jeu de données de départ.
     
     ***Note** : Plus loin dans le projet, nous nous servirons de la bibliothèque :orange[**Selenium**] pour nous connecter à Google traduction.*  
     *Puis pour chaque avis : détecter, récupérer sa langue de rédaction et traduire automatiquement son titre/commentaire
@@ -123,144 +108,131 @@ if sidebar == pages[1]:
     st.subheader("2. Web scrapping")
     st.write(webscrapping)
     st.write("---")
-    st.write("**Le jeu de données brut peut être visible en partie, ou en totalité ci-après.**")
-
-    # ----------- Si affichage demandé -----------
-    if st.toggle("Infos sur la table récoltée de Leboncoin", key= 1):
-        # Affichage des infos
-        buffer = io.StringIO()
-        df_leboncoin.info(buf=buffer)
-        s1 = buffer.getvalue()
-        st.text(s1)
-
-    if st.toggle("Infos sur la table récoltée de Vinted", key= 2):
-        # Affichage des infos
-        buffer = io.StringIO()
-        df_vinted.info(buf=buffer)
-        s2 = buffer.getvalue()
-        st.text(s2)
-
-    if st.toggle("Jeu de données brut de Leboncoin", key= 3):
-        number1 = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df_leboncoin), value= 5, key= 19)
-        # Affichage du df_leboncoin
-        st.dataframe(df_leboncoin.head(number1))
-
-    if st.toggle("Jeu de données brut de Vinted", key= 4):
-        number2 = st.number_input(":blue[*Nombre de lignes à afficher :*]", min_value=1, max_value= len(df_vinted), value= 5, key= 20)
-        # Affichage du df_vinted
-        st.dataframe(df_vinted.head(number2))
 
 # ----------------- Page 2 "Nettoyage du jeu de données" ------------------------------
 if sidebar == pages[2]:
     st.header(pages[2])
     # --------------- Affichage de l'introduction
-    intro = """ 
-            Le jeu de données brut (la table Leboncoin et la table Vinted) récolté d'internet par le webscrapping nécessite quelques 
+    st.write(""" 
+            Le jeu de données brut récolté d'internet par le webscrapping nécessite quelques 
             transformations afin d'être exploitable pour effectuer les premières visualisations.\n
-            Ces transformations impliquent notamment le renommage des colonnes, la mise à jour des types, des formattages de date,
+            Ces transformations impliquent notamment la mise à jour des types, des formattages de date,
             la suppression des doublons ou encore la gestion des NA.\n
-            Les sections suivantes détaillent les opérations qui ont été effectuées sur le Leboncoin (df_leboncoin) et Vinted (df_vinted).
-            Les infos sur les types et valeurs manquantes des deux tables du jeu de données sont visibles ci-après :
-            """
-    st.write(intro)
+            Les sections suivantes détaillent les opérations qui ont été effectuées sur le dataset.
+            """)
     st.write("---")
-    col1, col2 = st.columns(2)
 
-    if col1.toggle("Infos de la table Leboncoin", key= 5):
+    if st.toggle("Infos de la table", key= 5):
             # Affichage des infos de la table1
         buffer = io.StringIO()
-        df_leboncoin.info(buf=buffer)
+        df_cleaned.info(buf=buffer)
         s1 = buffer.getvalue()
-        col1.text(s1)
+        st.text(s1)
     
-    if col2.toggle("Infos de la table Vinted", key= 6):
-            # Affichage des infos de la table1
-        buffer = io.StringIO()
-        df_vinted.info(buf=buffer)
-        s2 = buffer.getvalue()
-        col2.text(s2)
     st.write("---")
 
-    # --------------- Renommage des attributs
-    renommage = """
-            Le renommage des colonnes se fait à l'aide d'un dictionnaire.\n
-            Le tri des entrées s'effectue dans le sens des plus récentes au moins récenes en fonction de la date de l'avis.
+    # --------------- Suppression des doublons
+    st.subheader("1. Suppression des doublons")
+    st.write("""Tous les doublons ont été supprimés
+             """)
+
+    if st.toggle(":green[Afficher le code]", key= 80):
+        code ="""
+            # Suppression des doublons
+            df = df.drop_duplicates()
             """
-    st.subheader("1. Renommage des attributs et tri des tables")
-    st.write(renommage)
+        st.code(code)
 
-    if st.toggle(":green[Afficher le code]", key= 7):
-        code = """
-                # Chargement des données brutes de Leboncoin dans df_leboncoin
-                df_leboncoin = pd.read_csv(file_leboncoin, sep= ",")
-                df_leboncoin = df_leboncoin.rename(columns= {"Unnamed: 0": "id avis", "date de visite": "date expérience",
-                                        "nb total avis": "nombre total avis", "date de l'avis (GMT+0)": "date/heure avis"})
-                df_leboncoin = df_leboncoin.set_index("id avis")
+    # --------------- Suppression des doublons
+    st.subheader("2. Harmonisation du nom de l'entreprise")
+    st.write("""Nommer les entreprises sous le même format : "VINTED.(extension du pays)"
+             """)
 
-                # Chargement des données brutes de Vinted dans df_vinted
-                df_vinted = pd.read_csv(file_vinted, sep= ",")
-                df_vinted = df_vinted.rename(columns= {"Unnamed: 0": "id avis", "date de visite": "date expérience",
-                                        "nb total avis": "nombre total avis", "date de l'avis (GMT+0)": "date/heure avis"})
-                df_vinted = df_vinted.set_index("id avis")
-
-                # Tri par date d'avis du plus récent au moins récent
-                df_leboncoin = df_leboncoin.sort_values(by= "date/heure avis", ascending= False)
-                df_vinted = df_vinted.sort_values(by= "date/heure avis", ascending= False)
-                """
+    if st.toggle(":green[Afficher le code]", key= 988):
+        code ="""
+            # Harmonisation du nom de l'entreprise
+            df["entreprise"] = df["entreprise"].apply(lambda x: "VINTED." + x.split("VINTED.")[-1])
+            """
         st.code(code)
 
     # --------------- Gestion des NA
-    gestion_na = """
-            Les NA sont remplacés par des "" pour les attributs de type string.
-            """
     st.subheader("2. Gestion des NA")
-    st.write(gestion_na)
+    st.write("""
+            Il y a 7 avis (sur 100k+) sans "pays". On supprime ces lignes.  
+            On remplace les noms, titres, commentaires et commentaire_vinted en NA par "".
+            """)
+
+    if st.toggle(":green[Afficher le code]", key= 839):
+        code ="""
+            # Il y a 7 avis (sur 100k+) sans "pays". On supprime ces lignes
+            df = df.dropna(subset= "pays")
+            # On remplace les noms, commentaires et commentaire_vinted en NA par ""
+            df["nom"] = df["nom"].fillna("")
+            df["commentaire"] = df["commentaire"].fillna("")
+            df["commentaire_vinted"] = df["commentaire_vinted"].fillna("")
+            """
+        st.code(code)
+    
+    # --------------- Numérisation de la colonne avis_verified
+    st.subheader("3. Numérisation de la colonne avis_verified")
+    st.write("""
+            Si un avis est vérifié cet attribut prendra la valeur 1, sinon 0.
+            """)
 
     if st.toggle(":green[Afficher le code]", key= 8):
         code ="""
-            # Gestion des NA df_leboncoin
-            # Il y a des NA parmi les modalités "nom" et "commentaire"
-            # On les remplace par ""
-            df_leboncoin["nom"] = df_leboncoin["nom"].fillna("")
-            df_leboncoin["commentaire"] = df_leboncoin["commentaire"].fillna("")
+            # Numérisation de la colonne "avis_verified" (1 si l'avis est "Vérifié", 0 sinon)
+            df["avis_verified"] = df["avis_verified"].apply(lambda x: 1 if x == "Vérifié" else 0)
+            """
+        st.code(code)
+    
+    # --------------- Ajout d'une colonne qui donne une valeur numérique au pays
+    st.subheader("4. Numérisation de la colonne pays")
+    st.write("""
+            Ajout d'une colonne qui donne une valeur numérique au pays.
+            """)
 
-            # Gestion des NA df_vinted
-            # Il y a des NA parmi les modalités "pays", "titre" et "commentaire"
-            # On les remplace par ""
-            df_vinted["pays"] = df_vinted["pays"].fillna("")
-            df_vinted["titre"] = df_vinted["titre"].fillna("")
-            df_vinted["commentaire"] = df_vinted["commentaire"].fillna("")
+    if st.toggle(":green[Afficher le code]", key= 83):
+        code ="""
+            # Ajout d'une colonne qui donne une valeur numérique au pays
+            liste = df["pays"].unique()
+            liste = np.sort(liste)
+            def func_get_pays_num(_pays):
+                global liste
+                pays_num = 0
+                for i in range(0,len(liste)):
+                    if _pays == liste[i]:
+                        pays_num = i+1
+                        break
+                return pays_num
+            pays_num = df["pays"].apply(func_get_pays_num)
+            df.insert(4, "pays_num", pays_num)
             """
         st.code(code)
 
     # Mise à jour des attributs
-    maj_type_attributs_date_exp = """
-            Dans les deux datasets, les modalités de la colonne :orange[**date expérience**] sont déjà sous la forme **%Y-%m-%d**, 
-            mais en format string. On leur applique simplement une conversion en date.
-                """
-    
-    st.subheader("3. Mise à jour des attributs")
-        # Mise à jour de la date d'expérience
+    st.subheader("4. Mise à jour des attributs")
+    # *** Mise à jour de la date d'expérience
     st.write("#### a. Mise à jour de l'attribut de la date d'expérience")
-    st.write(maj_type_attributs_date_exp)
+    st.write("""
+            Les modalités de la colonne :orange[**date_experience**] sont déjà sous la forme **%Y-%m-%d**, 
+            mais en format string. On leur applique simplement une conversion en date.
+            """)
 
     if st.toggle(":green[Afficher le code]", key= 9):
         code = """
-            # Mise à jour du type pour l'attribut "date expérience"
-            df_leboncoin["date expérience"] = pd.to_datetime(df_leboncoin["date expérience"])
-            df_vinted["date expérience"] = pd.to_datetime(df_vinted["date expérience"])
+            # Mise à jour du type pour l'attribut "date_experience"
+            df["date_experience"] = pd.to_datetime(df["date_experience"])
             """
         st.code(code)
 
-        # Mise à jour de la date de l'avis
-    maj_type_attributs_date_avis = """
-            Dans les deux datasets, les modalités de la colonne :orange[**date/heure avis**] doivent être sous la forme **%Y-%m-%d %H:%M:%S**. 
+    # *** Mise à jour de la date de l'avis    
+    st.write("#### b. Mise à jour de l'attribut de la date de l'avis")
+    st.write("""
+            Les modalités de la colonne :orange[**date_heure_avis**] doivent être sous la forme **%Y-%m-%d %H:%M:%S**. 
             Cependant, certaines colonnes apparaissent sous une forme différente.\n
             Création et application d'une fonction pour ajuster les string problématiques, avant de les formatter en datetime sur les deux df
-                """
-    
-    st.write("#### b. Mise à jour de l'attribut de la date de l'avis")
-    st.write(maj_type_attributs_date_avis)
+            """)
     
     if st.toggle(":green[Afficher le code]", key= 10):
         code = """
@@ -271,59 +243,47 @@ if sidebar == pages[2]:
                 _date = dt.datetime.strptime(_date, "%Y-%m-%d %H:%M:%S")
                 return _date
 
-            # Application de la fonction sur l'attribut "date/heure avis"
-            df_leboncoin["date/heure avis"] = df_leboncoin["date/heure avis"].apply(func_to_datetime)
-            df_vinted["date/heure avis"] = df_vinted["date/heure avis"].apply(func_to_datetime)
+            # Mise à jour du type pour l'attribut "date_heure_avis"
+            df["date_heure_avis"] = df["date_heure_avis"].apply(func_to_datetime)
             """
         st.code(code)
 
-        # Mise à jour de la date de l'avis
-    maj_type_autres_attributs = """
-            Utilisation d'un dictionnaire pour mettre à jour les types des autres attributs.
-                """
-    
+        # *** Mise à jour des autres attributs    
     st.write("#### c. Mise à jour des autres attributs")
-    st.write(maj_type_autres_attributs)
+    st.write("""
+            Utilisation d'un dictionnaire pour mettre à jour les types des autres attributs.
+            """)
     
     if st.toggle(":green[Afficher le code]", key= 11):
         code = """
             # Mise à jour du type pour les autres attributs
-            dict_types = {"nom": "str", "pays": "str", "note": "int", "nombre total avis": "int", "titre": "str", "commentaire": "str"}
-            df_leboncoin = df_leboncoin.astype(dict_types)
-            df_vinted = df_vinted.astype(dict_types)
+            dict_types = {"entreprise": "str", "nom": "str", "pays": "str", "note": "int", "nombre_total_avis": "int", "titre": "str", 
+                          "commentaire": "str", "commentaire_vinted": "str"}
+            df = df.astype(dict_types)
             """
         st.code(code)
 
-    # --------------- Suppression des doublons
-    suppression_doublons = """
-            Chaque doublon est supprimé, en gardant le plus récent.
-            """
-    
-    st.subheader("4. Suppression des doublons")
-    st.write(suppression_doublons)
-
-    if st.toggle(":green[Afficher le code]", key= 12):
-        code = """
-            # Suppression des doublons
-            df1_duplicated = df_leboncoin.duplicated()
-            df1_duplicated = df_leboncoin[df1_duplicated == True]
-            df_leboncoin = df_leboncoin.drop_duplicates()
-            df2_duplicated = df_vinted.duplicated()
-            df2_duplicated = df_vinted[df2_duplicated == True]
-            df_vinted = df_vinted.drop_duplicates()
-            """
-        st.code(code)
-
-    # --------------- Ajout des colonnes longueur titre/longueur commentaire
-    ajout_col_nb_mots_titre_commentaire = """
-            Rajout d'une colonne :orange[**longueur titre**] pour compter le nombre de mots qu'il y a dans le titre de l'avis.\n
-            Idem pour le rajout de la colonne :orange[**longueur commentaire**].
-            """
-    
-    st.subheader("5. Ajout des colonnes longueur titre/longueur commentaire")
-    st.write(ajout_col_nb_mots_titre_commentaire)
+    # --------------- Ajout de la colonne vinted_commented    
+    st.subheader("5. Ajout de la colonne vinted_commented")
+    st.write("""
+            Ajout d'une colonne, permettant de savoir si vinted a répondu à un avis (valeur 1) ou pas (valeur 0)
+            """)
 
     if st.toggle(":green[Afficher le code]", key= 13):
+        code = """
+            # Ajout d'une colonne pour indiquer si vinted a répondu à l'avis ou pas
+            df["vinted_commented"] = df["commentaire_vinted"].apply(lambda x: 0 if x == "" else 1)
+            """
+        st.code(code)
+
+    # --------------- Ajout des colonnes longueur_titre/longueur_commentaire    
+    st.subheader("6. Ajout des colonnes longueur_titre/longueur_commentaire")
+    st.write("""
+            Rajout d'une colonne :orange[**longueur_titre**] pour compter le nombre de mots qu'il y a dans le titre de l'avis.\n
+            Idem pour le rajout de la colonne :orange[**longueur_commentaire**].
+            """)
+
+    if st.toggle(":green[Afficher le code]", key= 153):
         code = """
             # Récupération du nombre de mots dans un texte
             def func_count_words(_text):
@@ -333,151 +293,95 @@ if sidebar == pages[2]:
                 return len(_text.split())
 
             # Ajout de la colonne longueur du titre
-            df_leboncoin["longueur titre"] = df_leboncoin["titre"].apply(func_count_words)
-            df_vinted["longueur titre"] = df_vinted["titre"].apply(func_count_words)
+            df["longueur_titre"] = df["titre"].apply(func_count_words)
 
             # Ajout de la colonne longueur du commentaire
-            df_leboncoin["longueur commentaire"] = df_leboncoin["commentaire"].apply(func_count_words)
-            df_vinted["longueur commentaire"] = df_vinted["commentaire"].apply(func_count_words)
+            df["longueur_commentaire"] = df["commentaire"].apply(func_count_words)
             """
         st.code(code)
 
     # --------------- Ajout des colonnes semaine/jour/mois/année pour les dates de l'expérience
     ajout_col_date_exp = """
-    Décomposition de l'attribut :orange[**date de l'expérience**] afin de récupérer la semaine, le jour de semaine,
+    Décomposition de l'attribut :orange[**date_experience**] afin de récupérer la semaine, le jour de semaine,
     le jour de mois, le mois et l'année. 
     """
     
-    st.subheader("6. Ajout des colonnes semaine/jour/mois/année à partir de la date de l'expérience")
+    st.subheader("7. Ajout des colonnes semaine/jour/mois/année à partir de la date de l'expérience")
     st.write(ajout_col_date_exp)
 
     if st.toggle(":green[Afficher le code]", key= 14):
         code = """
-        # Ajout de la colonne semaine expérience
-        df_leboncoin["semaine expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.week)
-        df_vinted["semaine expérience"] = df_vinted["date expérience"].apply(lambda date: date.week)
+        # Ajout de la colonne semaine_experience
+        df["semaine_experience"] = df["date_experience"].apply(lambda date: date.week)
 
         # Ajout de la colonne jour de semaine de l'expérience
-        df_leboncoin["jour semaine expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.day_of_week)
-        df_vinted["jour semaine expérience"] = df_vinted["date expérience"].apply(lambda date: date.day_of_week)
+        df["jour_semaine_experience"] = df["date_experience"].apply(lambda date: date.day_of_week)
 
         # Ajout de la colonne jour du mois de l'expérience
-        df_leboncoin["jour expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.day)
-        df_vinted["jour expérience"] = df_vinted["date expérience"].apply(lambda date: date.day)
+        df["jour_experience"] = df["date_experience"].apply(lambda date: date.day)
 
         # Ajout de la colonne mois de l'expérience
-        df_leboncoin["mois expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.month)
-        df_vinted["mois expérience"] = df_vinted["date expérience"].apply(lambda date: date.month)
+        df["mois_experience"] = df["date_experience"].apply(lambda date: date.month)
 
         # Ajout de la colonne année de l'expérience
-        df_leboncoin["année expérience"] = df_leboncoin["date expérience"].apply(lambda date: date.year)
-        df_vinted["année expérience"] = df_vinted["date expérience"].apply(lambda date: date.year)
+        df["annee_experience"] = df["date_experience"].apply(lambda date: date.year)
         """
         st.code(code)
 
     # --------------- Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis
-    ajout_col_date_avis = """
-    Décomposition de l'attribut :orange[**date/heure avis**] afin de récupérer l'heure, la semaine, le jour de semaine, 
-    le jour de mois, le mois et l'année.
-    """
-    
     st.subheader("7. Ajout des colonnes semaine/heure/jour/mois/année pour les dates de l'avis")
-    st.write(ajout_col_date_avis)
+    st.write("""
+             Décomposition de l'attribut :orange[**date_heure_avis**] afin de récupérer l'heure, la semaine, le jour de semaine, 
+             le jour de mois, le mois et l'année.
+            """)
 
     if st.toggle(":green[Afficher le code]", key= 15):
         code = """
     # Ajout de la colonne semaine de l'avis
-    df_leboncoin["semaine avis"] = df_leboncoin["date/heure avis"].apply(lambda date: date.week)
-    df_vinted["semaine avis"] = df_vinted["date/heure avis"].apply(lambda date: date.week)
+    df["semaine_avis"] = df["date_heure_avis"].apply(lambda date: date.week)
 
     # Ajout de la colonne jour de semaine de l'avis
-    df_leboncoin["jour semaine avis"] = df_leboncoin["date/heure avis"].apply(func_get_weekday)
-    df_vinted["jour semaine avis"] = df_vinted["date/heure avis"].apply(func_get_weekday)
+    df["jour_semaine_avis"] = df["date_heure_avis"].apply(lambda date: date.day_of_week)
 
     # Ajout de la colonne jour du mois de l'avis
-    df_leboncoin["jour avis"] = df_leboncoin["date/heure avis"].apply(lambda date: date.day)
-    df_vinted["jour avis"] = df_vinted["date/heure avis"].apply(lambda date: date.day)
+    df["jour_mois_avis"] = df["date_heure_avis"].apply(lambda date: date.day)
 
     # Ajout de la colonne mois de l'avis
-    df_leboncoin["mois avis"] = df_leboncoin["date/heure avis"].apply(func_get_month)
-    df_vinted["mois avis"] = df_vinted["date/heure avis"].apply(func_get_month)
+    df["mois_avis"] = df["date_heure_avis"].apply(lambda date: date.month)
 
     # Ajout de la colonne année de l'avis
-    df_leboncoin["année avis"] = df_leboncoin["date/heure avis"].apply(lambda date: date.year)
-    df_vinted["année avis"] = df_vinted["date/heure avis"].apply(lambda date: date.year)
+    df["annee_avis"] = df["date_heure_avis"].apply(lambda date: date.year)
 
     # Ajout de la colonne heure de l'avis
-    df_leboncoin["heure avis"] = df_leboncoin["date/heure avis"].apply(lambda date: date.hour)
-    df_vinted["heure avis"] = df_vinted["date/heure avis"].apply(lambda date: date.hour)
+    df["heure_avis"] = df["date_heure_avis"].apply(lambda date: date.hour)
     """
         st.code(code)
-
-    # --------------- Concaténation des tables Leboncoin et Vinted
-    select_concat_24500_avis = """
-    À l'issue de toutes ces étapes de nettoyage des deux df, la longueur de la table Leboncoin s'élève 24992 entrées, 
-    et celle de la table Vinted à 24867 entréees.\n
-    Afin d'harmoniser le jeu de données en taille, les 24500 premières entrées des deux tables sont concaténéees verticalement 
-    pour former un dataset unique.
-    """
-    
-    st.subheader("8. Concaténation des tables Leboncoin et Vinted")
-    st.write(select_concat_24500_avis)
-    
-    if st.toggle(":green[Afficher le code]", key= 16):
-        code = """
-        # Sélection de 24500 entrées les plus récentes pour chaque dataframe
-        df_leboncoin = df_leboncoin.head(24500)
-        df_vinted = df_vinted.head(24500)
-
-        # Insertion d'une colonne indiquant le nom de l'entreprise pour l'avis concerné
-        list1 = ["Leboncoin"] * len(df_leboncoin)
-        list2 = ["Vinted"] * len(df_vinted)
-        df_leboncoin.insert(0, "entreprise", list1)
-        df_vinted.insert(0, "entreprise", list2)
-
-        # Concaténation des deux dataframe
-        df_cleaned = pd.concat([df_leboncoin, df_vinted], axis= 0, ignore_index= True)
-
-        # Tri par date d'avis du plus récent au moins récent
-        df_cleaned = df_cleaned.sort_values(by= "date/heure avis", ascending= False)
-
-        # Mise à jour de l'index
-        df_cleaned = df_cleaned.reset_index(drop= True)
-        index_df = range(0, len(df_cleaned))
-        df_cleaned.insert(0, "id avis", index_df)
-        df_cleaned = df_cleaned.set_index("id avis")
-        """
-        st.code(code)
-
 
     # --------------- Ajout des colonnes langue de l'avis/titre fr/commentaire fr
-    traduction = """
-    Certains avis ont été rédigés par des clients dans une autre langue. La dernière étape dans ce 1er travail 
-    de revue de dataset consiste à rajouter :
-    - Une colonne avec la valeur de la langue dans laquelle l'avis a été rédigé
-    - Une colonne avec la traduction du titre en français
-    - Une colonne avec la traduction du commentaire en français\n
-    Pour récupérer les traductions, nous nous servons de la bibliothèque :orange[**Selenium**] de python pour nous connecter 
-    à Google translate afin de :  
-    - Insérer chaque titre/commentaire de la table dans le champ du texte à traduire de la page Google  
-    - Récupérer la valeur de la "Langue Détectée" par Google et la rajouter dans la ligne correspondante du dataset  
-    - Récupérer la valeur de la traduction et la rajouter dans la ligne correspondante du dataset (si le titre/commentaire
-    n'est pas rédigé en français)
-    """
-    
     st.subheader("9. Ajout des colonnes langue de l'avis/titre fr/commentaire fr")
-    st.write(traduction)
+    st.write("""
+             La plupart des avis ont été rédigés par des clients dans une autre langue. La dernière étape dans ce 1er travail 
+             de revue de dataset consiste à rajouter :  
+             - Une colonne avec la valeur de la langue dans laquelle l'avis a été rédigé
+             - Une colonne avec la traduction du commentaire en français\n
+             
+             Pour récupérer les traductions, nous nous servons de la bibliothèque :orange[**Selenium**] de python pour nous connecter
+             à Google translate afin de :  
+             - Insérer chaque titre/commentaire de la table dans le champ du texte à traduire de la page Google  
+             - Récupérer la valeur de la "Langue Détectée" par Google et la rajouter dans la ligne correspondante du dataset  
+             - Récupérer la valeur de la traduction et la rajouter dans la ligne correspondante du dataset (si le titre/commentaire
+             n'est pas rédigé en français)
+             """)
     
     # --------------- Conclusion de la page
-    conclusion  = """
-    Ces premières transformations ont permis d'obtenir un dataset de départ propre, et exploitable pour commencer 
-    à faire quelques visualisations.\n
-    Dans la suite du projet, de nouvelles transformations seront apportées pour discrétiser et dichotomiser certains attributs 
-    afin de créer des features adaptées aux calculs de Machine Learning.
-    """
     st.subheader("10. État des lieux")
     st.write(f"Le jeu de données nettoyé et réajusté comporte {df_cleaned.shape[0]} entrées et {df_cleaned.shape[1]} attributs.")
-    st.write(conclusion)
+    st.write("""
+             Ces premières transformations ont permis d'obtenir un dataset de départ propre, et exploitable pour commencer 
+             à faire quelques visualisations.\n
+             Dans la suite du projet, de nouvelles transformations seront apportées pour discrétiser et dichotomiser certains attributs 
+             afin de créer des features adaptées aux calculs de Machine Learning.
+             """)
     st.write("---")
 
     if st.toggle("Infos du dataset après nettoyage et réajustement", key= 17):
@@ -519,16 +423,17 @@ if sidebar == pages[3]:
 
     # Création des filtres
     with st.expander("###### **Filtrer par :**", expanded= True):
-        colonnes = st.multiselect(":green[Attributs =]", df_cleaned.columns, placeholder= "...")
+        colonnes = st.multiselect(":green[Attributs =]", df_cleaned.columns, placeholder= "")
         attributs = list(df_cleaned.columns) if colonnes == list() else colonnes
 
         col1, col2, col3 = st.columns(3)
-        nb_avis = col1.number_input(":green[Nombre d'avis max à afficher =]", min_value= 1, max_value= len(df_cleaned), value= len(df_cleaned), help= h)
+        nb_avis = col1.number_input(":green[Nombre d'avis max à afficher =]", min_value= 1,
+                                    max_value= len(df_cleaned), value= len(df_cleaned), help= h)
         notes = col2.multiselect(":green[Note =]", sorted(df_cleaned["note"].unique(), reverse= True), placeholder= "...")
         notes = list(df_cleaned["note"].unique()) if notes == list() else notes
 
-        min_date = df_cleaned["date/heure avis"].min()
-        max_date = df_cleaned["date/heure avis"].max()
+        min_date = df_cleaned["date_heure_avis"].min()
+        max_date = df_cleaned["date_heure_avis"].max()
         dates = col3.date_input(":green[Date ou période des avis =]",
                         value= (min_date, max_date),
                         min_value= min_date, max_value= max_date,
@@ -542,7 +447,7 @@ if sidebar == pages[3]:
 
     # Création de la table
     df_shown = df_cleaned.copy()
-    df_shown = df_shown[(df_shown["date/heure avis"].between(date_debut, date_fin, inclusive= "both"))]
+    df_shown = df_shown[(df_shown["date_heure_avis"].between(date_debut, date_fin, inclusive= "both"))]
     df_shown = df_shown[(df_shown["note"].isin(notes))]
     df_shown = df_shown[attributs]
     df_shown = df_shown.head(nb_avis)
@@ -559,8 +464,8 @@ if sidebar == pages[3]:
 
     # Bouton de téléchargement
     @st.cache_data # IMPORTANT: mise en cache de la conversion pour éviter l'exécution à chaque rerun
-    def convert_df(df):
-        return df.to_csv().encode("utf-8")
+    def convert_df(_df):
+        return _df.to_csv().encode("utf-8")
 
     csv = convert_df(df_shown)
 
@@ -576,8 +481,8 @@ if sidebar == pages[3]:
     # Affichage de la table
     st.dataframe(df_shown, column_config= 
                  {"_index": st.column_config.NumberColumn(format= "%d"),
-                  "année expérience": st.column_config.NumberColumn(format= "%d"),
-                  "année avis": st.column_config.NumberColumn(format= "%d"),
+                  "annee_experience": st.column_config.NumberColumn(format= "%d"),
+                  "annee_avis": st.column_config.NumberColumn(format= "%d"),
                   "date expérience": st.column_config.DateColumn()})
     
     st.write("---")
@@ -587,29 +492,25 @@ if sidebar == pages[3]:
     # --------------------------------------------------------------------
     st.subheader("2. Répartition du nombre total d'avis")
     st.write("""
-             Afficher la répartition du nombre d'avis en fonction de la note, du pays.  
+             Afficher la répartition du nombre d'avis en fonction de l'entreprise, de la note, de si l'avis est vérifié,  
              Ou encore en fonction de l'heure, du jour, du mois et de l'année de publication.
              """)
-    
-    # Code couleur pour Leboncoin et Vinted
-    color_l = "#E67333"
-    color_v = "#337680"
 
     # Création des filtres
-    liste_filtres = ["Valeur de la note", "Pays du client", "Heure de publication", "Jour de publication en semaine", 
+    liste_filtres = ["Entreprise", "Note", "Avis vérifié", "Heure de publication", "Jour de publication en semaine", 
                      "Jour de publication dans le mois", "Mois de publication", "Année de publication"]
-    dict_note = {"Valeur de la note": "note", "Pays du client": "pays", "Heure de publication": "heure avis", 
-               "Jour de publication en semaine": "jour semaine avis", "Jour de publication dans le mois": "jour avis",
-               "Mois de publication": "mois avis", "Année de publication": "année avis"}
+    dict_note = {"Entreprise": "entreprise", "Note": "note", "Avis vérifié": "avis_verified", 
+                 "Heure de publication": "heure_avis", "Jour de publication en semaine": "jour_semaine_avis", 
+                 "Jour de publication dans le mois": "jour_mois_avis", "Mois de publication": "mois_avis", "Année de publication": "anne_avis"}
     
     with st.container(border= True):
         type_filtre = st.selectbox("###### **Nombre d'avis en fonction de :**", options= liste_filtres)
     filtre = dict_note[type_filtre]
 
-    # Nombre d'avis en fonction de la valeur de "valeur de la note", "heure avis", "jour semaine avis", "jour avis", "mois avis", "année avis"
-    if filtre in ["note", "heure avis", "jour semaine avis", "jour avis", "mois avis", "année avis"]:
+    # Nombre d'avis en fonction de la valeur de "valeur de la note", "heure_avis", "jour_semaine_avis", "jour_mois_avis", "mois_avis", "annee_avis"
+    if filtre in ["note", "heure_avis", "jour_semaine_avis", "jour_mois_avis", "mois_avis", "annee_avis"]:
         fig, ax = plt.subplots(figsize= (10, 5))
-        sns.countplot(x= df_cleaned[filtre], hue= df_cleaned["entreprise"], palette= [color_l, color_v], ax= ax)
+        sns.countplot(x= df_cleaned[filtre], hue= df_cleaned["entreprise"], ax= ax)
         plt.title(f"Nombre d'avis par : {type_filtre}")
         plt.xlabel(type_filtre.capitalize() + (f" (nombre d'étoiles)" if filtre == "note" else ""))
         plt.ylabel("Nombre d'avis")
@@ -617,33 +518,15 @@ if sidebar == pages[3]:
 
         # Affichage des totaux sur les barres
         for container in ax.containers:
-            if filtre not in ["jour avis", "mois avis", "heure avis"]:
+            if filtre not in ["jour_mois_avis", "mois_avis", "heure_avis"]:
                 ax.bar_label(container)
 
         # Affichage des noms de jours si filtre sur le jour
-        if (filtre == "jour semaine avis") :
+        if (filtre == "jour_semaine_avis") :
             dict_jour = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
             plt.xticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
 
         st.pyplot(fig)
-    
-    # Nombre d'avis en fonction du "pays du client"
-    if filtre == "pays":
-        # Affichage du graphique de Leboncoin
-        df_cleaned_pays = df_cleaned.copy()
-        df_cleaned_pays["pays"] = df_cleaned_pays["pays"].apply(lambda x: "Autres pays" if x not in ["FR"] else x)
-        fig1, ax1 = plt.subplots(figsize= (10, 5))
-        sns.countplot(x= df_cleaned_pays["pays"], hue= df_cleaned_pays["entreprise"], legend= "full", palette= [color_l, color_v], ax= ax1)
-        plt.title(f"Nombre d'avis par : {type_filtre}")
-        plt.xlabel(type_filtre.capitalize())        
-        plt.ylabel("Nombre d'avis")
-        #plt.legend(title= "Entreprise")
-
-        # Affichage des totaux sur les barres
-        for container in ax1.containers:
-            ax1.bar_label(container)
-            
-        st.pyplot(fig1)
 
     st.write("---")
 
@@ -660,19 +543,17 @@ if sidebar == pages[3]:
              """)
 
     # Création des filtres
-    quant_vars = ["note", "nombre total avis", "longueur titre", "longueur commentaire"]     # Variables quantitatives
-    temp_vars = ["jour semaine expérience", "semaine expérience", "jour expérience", "mois expérience", "année expérience", 
-                 "heure avis", "jour semaine avis", "semaine avis", "jour avis", "mois avis", "année avis"]  # Variables temporelles
-    entreprises = ["Leboncoin", "Vinted"]
+    quant_vars = ["note", "nombre_total_avis", "longueur_titre", "longueur_commentaire"]     # Variables quantitatives
+    temp_vars = ["jour_semaine_experience", "semaine_experience", "jour_experience", "mois_experience", "annee_experience", 
+                 "heure_avis", "jour_semaine_avis", "semaine_avis", "jour_mois_avis", "mois_avis", "annee_avis"]  # Variables temporelles
     
     with st.expander("###### **Filtrer par :**", expanded= False):
         sel1 = st.multiselect(":green[Variables quantitatives =]", quant_vars, default= quant_vars, placeholder= "...")
         sel2 = st.multiselect(":green[Variables temporelles =]", temp_vars, default= temp_vars, placeholder= "...")
-        entreprises = st.multiselect(":green[Entreprises =]", entreprises, default= entreprises, placeholder= "...")
 
     # Affichage du graphique
-    df_corr = df_cleaned[df_cleaned["entreprise"] == entreprises[0]] if len(entreprises) == 1 else df_cleaned.copy()
-    df_corr = df_corr[sel1 + sel2]
+    df_corr = df_cleaned.copy()
+    df_corr = df_corr[["pays_num"] + sel1 + sel2]
     df_corr = df_corr.corr()
     try:
         fig, ax = plt.subplots(figsize= (11, 5))
@@ -698,38 +579,36 @@ if sidebar == pages[3]:
              """)
 
     # Création des filtres
-    quant_vars = ["note", "nombre total avis", "longueur titre", "longueur commentaire"]     # Variables quantitatives
-    temp_vars = ["jour semaine expérience", "semaine expérience", "jour expérience", "mois expérience", "année expérience", 
-                 "heure avis", "jour semaine avis", "semaine avis", "jour avis", "mois avis", "année avis"]  # Variables temporelles
-    entreprises = ["Leboncoin", "Vinted"]
+    quant_vars = ["note", "nombre_total_avis", "longueur_titre", "longueur_commentaire"]     # Variables quantitatives
+    temp_vars = ["jour_semaine_experience", "semaine_experience", "jour_experience", "mois_experience", "annee_experience", 
+                 "heure_avis", "jour_semaine_avis", "semaine_avis", "jour_mois_avis", "mois_avis", "annee_avis"]  # Variables temporelles
     
-    sel1 = st.selectbox(":green[x =]", options= ["note", "jour semaine expérience", "année expérience",
-                                            "jour semaine avis", "année avis"], index= 0, placeholder= "")
+    sel1 = st.selectbox(":green[x =]", options= ["note", "jour_semaine_experience", "annee_experience",
+                                            "jour_semaine_avis", "annee_avis"], index= 0, placeholder= "")
     sel2 = st.selectbox(":green[y =]", options= quant_vars + temp_vars, index= 3, placeholder= "")
-    entreprises = st.multiselect(":green[Entreprises =]", entreprises, default= entreprises, placeholder= "")
 
     # Affichage de la distribution des avis
-    df_cleaned_pays_dist = df_cleaned[df_cleaned["entreprise"] == entreprises[0]] if len(entreprises) == 1 else df_cleaned
+    df_cleaned_pays_dist = df_cleaned.copy()
     if (sel1 in (quant_vars + temp_vars)) and (sel2 in (quant_vars + temp_vars)):
         fig, ax = plt.subplots(figsize= (10, 5))
 
         # Masque des valeurs extrêmes
         if not st.checkbox("**Afficher les valeurs extrêmes**") :
             sns.boxplot(x= df_cleaned_pays_dist[sel1], y= df_cleaned_pays_dist[sel2], showfliers = False,
-                        hue= df_cleaned_pays_dist["entreprise"], palette= [color_l, color_v])
+                        hue= df_cleaned_pays_dist["entreprise"])
         else:
             sns.boxplot(x= df_cleaned_pays_dist[sel1], y= df_cleaned_pays_dist[sel2], showfliers = True,
-                        hue= df_cleaned_pays_dist["entreprise"], palette= [color_l, color_v])
+                        hue= df_cleaned_pays_dist["entreprise"])
         plt.title(f"Distribution entre : {sel1.upper()} et {sel2.upper()}")
         plt.xlabel(sel1)
         plt.ylabel(sel2)
         plt.legend(title= "Entreprise")
 
         # Affichage des noms de jours si filtre sur le jour
-        if (sel1 == "jour semaine avis") or (sel1 == "jour semaine expérience"):
+        if (sel1 == "jour_semaine_avis") or (sel1 == "jour_semaine_experience"):
             dict_jour = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
             plt.xticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
-        if (sel2 == "jour semaine avis") or (sel2 == "jour semaine expérience"):
+        if (sel2 == "jour_semaine_avis") or (sel2 == "jour_semaine_experience"):
             dict_jour = {0: "Dimanche", 1: "Lundi", 2: "Mardi", 3: "Mercredi", 4: "Jeudi", 5: "Vendredi", 6: "Samedi"}
             plt.yticks([0, 1, 2, 3, 4, 5, 6], ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
 
@@ -756,9 +635,7 @@ if sidebar == pages[3]:
                         options= list(dict_continent.keys()),
                         index= 0, placeholder= "")
     
-    kol1, kol2 = st.columns(2)
-    entreprises = kol1.multiselect(":green[Entreprise =]", entreprises, default= entreprises, key= 23)
-    entreprise = ["Leboncoin", "Vinted"] if len(entreprises) == 0 else entreprises
+
 
     metrique = kol2.selectbox(":green[Métrique à afficher =]", options= ["Nombre d'avis", "Moyenne"], index= 0)
     metrique = "Nombre d'avis" if len(metrique) == 0 else metrique
@@ -767,21 +644,12 @@ if sidebar == pages[3]:
     # ---------------------------------------------
     # ------ Nombre et moyenne d'avis par pays (global) ------
     # ---------------------------------------------
-    if len(entreprises) == 1:
-        # Préparation des données à dessiner l'entreprise
-        df_metrique = df_cleaned.loc[df_cleaned["entreprise"] == entreprises[0]]
-        if metrique == "Moyenne":
-            df_metrique = df_metrique.groupby("pays").agg(my_func).reset_index().rename(columns= {"note": "moy"})
-            df_metrique = round(df_metrique, 2)
-        else:
-            df_metrique = df_metrique["pays"].value_counts().reset_index()
+    # Préparation des données à dessiner pour les deux entreprise
+    if metrique == "Moyenne":
+        df_metrique = df_cleaned.groupby("pays").agg(my_func).reset_index().rename(columns= {"note": "moy"})
+        df_metrique = round(df_metrique, 2)
     else:
-        # Préparation des données à dessiner pour les deux entreprise
-        if metrique == "Moyenne":
-            df_metrique = df_cleaned.groupby("pays").agg(my_func).reset_index().rename(columns= {"note": "moy"})
-            df_metrique = round(df_metrique, 2)
-        else:
-            df_metrique = df_cleaned["pays"].value_counts().reset_index()
+        df_metrique = df_cleaned["pays"].value_counts().reset_index()
 
 
     df_metrique = df_metrique.merge(df_world_map, how= "inner", left_on= "pays", right_on= "iso_3166_1_")
@@ -853,12 +721,10 @@ if sidebar == pages[3]:
                                      ))
     
     # Affichage d'un tableau top10
-    texte = f'{entreprises[0]}' if len(entreprises) == 1 else f'Leboncoin\n + Vinted'
     col1, col2 = st.columns([0.20, 0.80])
 
     col1.write("---")
     col1.write(f"***Top 5 {continent} :***")
-    col1.text(texte)
     my_dict = {"count": "Total", "moy": "Moy."}
     t = df_metrique.head(5)[["name_fr", df_metrique.columns[1]]].rename(columns= {"name_fr": "Pays", 
                                                                                   df_metrique.columns[1]: my_dict[df_metrique.columns[1]]})
